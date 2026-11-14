@@ -12,4 +12,8 @@ if ! "$PG_BIN/pg_isready" -q; then
 fi
 
 [[ -d .venv ]] || python3 -m venv .venv
+# The venv's bundled pip is too old to pick a prebuilt wheel for this Python/macOS
+# combo, so it falls back to a source build (greenlet) that fails against the
+# mini's SDK/toolchain mismatch. Upgrade it first.
+.venv/bin/pip install -q --upgrade pip
 .venv/bin/pip install -q -r requirements-dev.txt
