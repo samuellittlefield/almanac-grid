@@ -11,9 +11,10 @@ if ! "$PG_BIN/pg_isready" -q; then
   "$PG_BIN/pg_ctl" -D "$PG_DATA" -l "$PG_DATA/postgres.log" start -w
 fi
 
-[[ -d .venv ]] || python3 -m venv .venv
-# The venv's bundled pip is too old to pick a prebuilt wheel for this Python/macOS
-# combo, so it falls back to a source build (greenlet) that fails against the
-# mini's SDK/toolchain mismatch. Upgrade it first.
+# The system python3 is a universal2 (arm64+x86_64) build; compiling C
+# extensions (greenlet, psycopg2) against the Catalina SDK fails on the arm64
+# slice. Use the single-arch x86_64 portable build set up for this reason.
+PYTHON="$HOME/py311-standalone/bin/python3.11"
+[[ -d .venv ]] || "$PYTHON" -m venv .venv
 .venv/bin/pip install -q --upgrade pip
 .venv/bin/pip install -q -r requirements-dev.txt
