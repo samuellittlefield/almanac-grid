@@ -11,5 +11,5 @@ if ! "$PG_BIN/pg_isready" -q; then
   "$PG_BIN/pg_ctl" -D "$PG_DATA" -l "$PG_DATA/postgres.log" start -w
 fi
 
-[[ -d .venv ]] || python3.11 -m venv .venv
+[[ -d .venv ]] || python3 -m venv .venv
 .venv/bin/pip install -q -r requirements-dev.txt
