@@ -1,0 +1,257 @@
+"""Tests for scripts/ingest_ferc.py against a saved sample of FERC search
+results (tests/fixtures/sample_ferc_search_response.json). Nothing here talks
+to the live FERC site."""
+
+from __future__ import annotations
+
+import datetime
+import json
+from pathlib import Path
+
+import pytest
+
+from app.models import AgencyAction, Project
+from scripts import ingest_ferc
+from scripts.ingest_ferc import (
+    CP_CONFIG,
+    EL_CONFIG,
+    P_CONFIG,
+    ActionRecord,
+    base_docket_number,
+    classify_decision,
+    extract_applicant,
+    extract_project_name,
+    extract_region,
+    finalize_records,
+    fiscal_year_codes,
+    merge_application_hit,
+    merge_decision_hit,
+    merge_withdrawal_hit,
+    upsert_records,
+)
+
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "sample_ferc_search_response.json"
+WINDOW_START = datetime.date(2016, 1, 1)
+
+
+@pytest.fixture(scope="module")
+def sample() -> dict:
+    return json.loads(FIXTURE_PATH.read_text())
+
+
+def _parse(sample: dict, config, key: str) -> dict[str, ActionRecord]:
+    """Run one docket prefix's saved hits through the same merge steps, in the
+    same order, as collect_records_for_prefix."""
+    records: dict[str, ActionRecord] = {}
+    action_type = config.application_types[0][1]
+    for hit in sample[f"{key}_applications"]:
+        merge_application_hit(records, hit, config, action_type)
+    for hit in sample[f"{key}_orders"]:
+        merge_decision_hit(records, hit, config)
+    for hit in sample.get(f"{key}_withdrawals", []):
+        merge_withdrawal_hit(records, hit, config)
+    return {r.docket_number: r for r in finalize_records(records, config, WINDOW_START)}
+
+
+@pytest.fixture(scope="module")
+def cp_records(sample) -> dict[str, ActionRecord]:
+    return _parse(sample, CP_CONFIG, "cp")
+
+
+def test_certificate_application_paired_with_its_order(cp_records):
+    record = cp_records["CP17-101-000"]
+    assert record.action_type == "certificate_application"
+    assert record.project_type == "natural_gas_pipeline"
+    assert record.applicant == "Transcontinental Gas Pipe Line Company, LLC"
+    assert record.project_name == "Northeast Supply Enhancement Project"
+    assert record.filed_date == datetime.date(2017, 3, 27)
+    assert record.outcome == "approved"
+    assert record.decision_date == datetime.date(2019, 5, 3)
+    assert record.source_url == "https://elibrary.ferc.gov/eLibrary/filelist?accession_number=20190503-3049"
+
+
+def test_procedural_orders_do_not_change_the_outcome(cp_records):
+    # "Order Denying Rehearing and Stay" and "Order Vacating Certificate..." sit
+    # on the same docket as the approval and must not be read as a denial.
+    assert cp_records["CP17-101-000"].outcome == "approved"
+    assert "CP17-101-001" not in cp_records
+    assert "CP17-101-006" not in cp_records
+
+
+def test_later_sub_docket_is_a_separate_action(cp_records):
+    record = cp_records["CP17-101-007"]
+    assert record.action_type == "certificate_amendment"
+    # Filed date comes from the petition, not the later supplement.
+    assert record.filed_date == datetime.date(2025, 5, 29)
+    assert record.outcome == "approved"
+    # The order is dated 08/28; the next-day errata notice is not a decision.
+    assert record.decision_date == datetime.date(2025, 8, 28)
+
+
+def test_prior_notice_filings_are_not_applications(cp_records):
+    assert "CP19-478-000" not in cp_records
+
+
+def test_lng_terminal_is_split_out_of_cp_dockets(cp_records):
+    record = cp_records["CP20-55-000"]
+    assert record.project_type == "lng_terminal"
+    assert record.outcome == "approved"
+    assert record.project_name == "Example LNG Export Terminal Project"
+    assert record.region == "LA"
+
+
+def test_denied_application(cp_records):
+    record = cp_records["CP19-999-000"]
+    assert record.outcome == "denied"
+    assert record.decision_date == datetime.date(2020, 8, 15)
+
+
+def test_withdrawn_application(cp_records):
+    record = cp_records["CP21-400-000"]
+    assert record.outcome == "withdrawn"
+    assert record.decision_date == datetime.date(2021, 12, 7)
+
+
+def test_hydro_relicense_keeps_only_the_decided_application(sample):
+    records = _parse(sample, P_CONFIG, "hydro")
+
+    # The draft application and the earlier placeholder filing are precursors
+    # of the one relicensing that the 2026 order decided.
+    assert list(records) == ["P-2639-028"]
+    record = records["P-2639-028"]
+    assert record.action_type == "license_application"
+    assert record.project_type == "hydroelectric"
+    assert record.applicant == "Northern States Power Company - Wisconsin"
+    assert record.project_name == "Cornell Project"
+    assert record.filed_date == datetime.date(2021, 11, 30)
+    assert record.outcome == "approved"
+    assert record.decision_date == datetime.date(2026, 9, 10)
+
+
+def test_el_complaint(sample):
+    records = _parse(sample, EL_CONFIG, "el")
+
+    # Only the original complaint is an action; the later compliance tariff
+    # filing on sub-docket 003 is not.
+    assert list(records) == ["EL19-47-000"]
+    record = records["EL19-47-000"]
+    assert record.action_type == "complaint"
+    assert record.project_type == "electric_transmission"
+    assert record.outcome == "approved"
+    assert record.decision_date == datetime.date(2021, 3, 18)
+
+
+def test_records_outside_the_window_are_dropped(sample):
+    records = _parse(sample, CP_CONFIG, "cp")
+    late_start = datetime.date(2022, 1, 1)
+    kept = finalize_records(dict(records), CP_CONFIG, late_start)
+    # Only the 2025 petition was filed or decided on/after 2022. It was filed
+    # in two consolidated dockets, so it is an action on both.
+    assert sorted(r.docket_number for r in kept) == ["CP17-101-007", "CP20-49-001"]
+
+
+@pytest.mark.parametrize(
+    "description,project_type,expected",
+    [
+        ("Order Issuing Certificate re X under CP18-1.", "natural_gas_pipeline", "approved"),
+        ("Ordering Issuing Certificates re Adelphia Gateway, LLC under CP18-46 et al.", "natural_gas_pipeline", "approved"),
+        ("Order on Remand and Reissuing Certificates re Spire STL Pipeline LLC under CP17-40.", "natural_gas_pipeline", "approved"),
+        ("Order Addressing Arguments Raised on Rehearing and Denying Stay re X under CP17-40.", "natural_gas_pipeline", None),
+        ("Order Granting Extension of Time re X under CP17-101.", "natural_gas_pipeline", None),
+        ("Order Issuing Original License re FFP Project 101, LLC's Goldendale Project under P-14861.", "hydroelectric", "approved"),
+        ("Order Granting Exemption from Licensing (10 MW or Less) re Water Street Land, LLC under P-14680.", "hydroelectric", "approved"),
+        ("Order Issuing Preliminary Permit and Granting Priority to File License Application re X under P-15425.", "hydroelectric", None),
+        ("Order Denying Extension of License Term re Ampersand Ogdensburg Hydro, LLC under P-9821.", "hydroelectric", None),
+        ("Letter to WEC Energy Group denying the request for an exemption from 18 CFR Part 12 under P-1.", "hydroelectric", None),
+        ("Order Denying Complaint re A v. B under EL20-1.", "electric_transmission", "denied"),
+        ("Order Granting in Part and Denying in Part Complaint re A v. B under EL20-2.", "electric_transmission", "approved"),
+        ("Order on Complaint re A v. B under EL21-61.", "electric_transmission", None),
+    ],
+)
+def test_classify_decision(description, project_type, expected):
+    assert classify_decision(description, project_type) == expected
+
+
+def test_extract_applicant_from_order_description():
+    hit = {
+        "category": "Issuance",
+        "description": "Order Issuing New License re Rumford Falls Hydro LLC's Rumford Falls Hydroelectric Project under P-2333.",
+    }
+    assert extract_applicant(hit) == "Rumford Falls Hydro LLC"
+    assert extract_project_name(hit["description"]) == "Rumford Falls Hydroelectric Project"
+
+
+def test_extract_region():
+    assert extract_region("pipeline facilities in Greene County, Pennsylvania") == "PA"
+    assert extract_region("facilities in Kanawha County, West Virginia") == "WV"
+    assert extract_region("Order Issuing Certificate re X under CP18-1.") is None
+
+
+def test_base_docket_number():
+    assert base_docket_number("CP18-137-004") == "CP18-137"
+    assert base_docket_number("P-2669-102") == "P-2669"
+
+
+def test_fiscal_year_codes_follow_october_year_start():
+    assert fiscal_year_codes(datetime.date(2016, 1, 1), datetime.date(2018, 6, 1)) == ["16", "17", "18"]
+    # A docket opened in November 2026 is numbered for fiscal year 2027.
+    assert fiscal_year_codes(datetime.date(2025, 1, 1), datetime.date(2026, 11, 15)) == ["25", "26", "27"]
+
+
+def test_upsert_is_idempotent_and_groups_sub_dockets_under_one_project(db_session, cp_records):
+    upsert_records(db_session, cp_records.values())
+    db_session.commit()
+    upsert_records(db_session, cp_records.values())
+    db_session.commit()
+
+    assert db_session.query(Project).count() == 5
+    assert db_session.query(AgencyAction).count() == 6
+
+    transco = db_session.query(Project).filter_by(name="Northeast Supply Enhancement Project").one()
+    assert transco.applicant == "Transcontinental Gas Pipe Line Company, LLC"
+    assert [(a.docket_number, a.action_type, a.outcome) for a in transco.actions] == [
+        ("CP17-101-000", "certificate_application", "approved"),
+        ("CP17-101-007", "certificate_amendment", "approved"),
+    ]
+    assert {a.agency for a in transco.actions} == {"FERC"}
+
+
+def test_upsert_updates_a_pending_action_once_it_is_decided(db_session):
+    pending = ActionRecord(
+        docket_number="CP24-7-000",
+        project_type="natural_gas_pipeline",
+        action_type="certificate_application",
+        applicant="Example Pipeline, LLC",
+        filed_date=datetime.date(2024, 1, 10),
+    )
+    upsert_records(db_session, [pending])
+    db_session.commit()
+
+    pending.outcome = "approved"
+    pending.decision_date = datetime.date(2025, 2, 1)
+    upsert_records(db_session, [pending])
+    db_session.commit()
+
+    action = db_session.query(AgencyAction).one()
+    assert (action.outcome, action.decision_date) == ("approved", datetime.date(2025, 2, 1))
+
+
+def test_search_pages_are_requested_from_page_one(monkeypatch):
+    """FERC's API returns page 1 for both curPage 0 and 1; starting at 0 would
+    repeat the first page and never reach the last."""
+    requested = []
+
+    def fake_post(session, body):
+        requested.append(body["curPage"])
+        page = body["curPage"]
+        return {"success": True, "totalHits": 5, "searchHits": [{"n": i} for i in range((page - 1) * 2, min(page * 2, 5))]}
+
+    monkeypatch.setattr(ingest_ferc, "_post_with_retry", fake_post)
+    hits = list(
+        ingest_ferc.iter_search_hits(
+            None, "CP19", ["Issuance"], "Order/Opinion", "Commission Order/Opinion",
+            WINDOW_START, datetime.date(2026, 1, 1), page_size=2, sleep_seconds=0,
+        )
+    )
+    assert requested == [1, 2, 3]
+    assert [h["n"] for h in hits] == [0, 1, 2, 3, 4]

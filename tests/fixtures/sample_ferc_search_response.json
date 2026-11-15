@@ -1,0 +1,216 @@
+{
+  "_comment": "Saved sample of FERC eLibrary AdvancedSearch `searchHits`, trimmed to the fields the ingestion script reads. Grouped by the query that returns them. Descriptions, dockets, dates and accession-number formats follow real eLibrary records; the denied, withdrawn and LNG cases use made-up applicants so each outcome path is covered.",
+  "cp_applications": [
+    {
+      "description": "Transcontinental Gas Pipe Line Company, LLC submits an application for a certificate of public convenience and necessity for the Northeast Supply Enhancement Project under CP17-101.",
+      "category": "Submittal",
+      "acesssionNumber": "20170327-5102",
+      "filedDate": "03/27/2017",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Certificate of Public Convenience and Necessity"}],
+      "docketNumbers": ["CP17-101-000"],
+      "affiliations": [
+        {"afType": "AUTHOR", "affiliation": "Transcontinental Gas Pipe Line Company, LLC"},
+        {"afType": "RECIPIENT", "affiliation": "Office of the Secretary, FERC"}
+      ]
+    },
+    {
+      "description": "Petition of Transcontinental Gas Pipe Line Company, LLC for Expedited Reissuance of Certificate Authority under CP17-101, et al.",
+      "category": "Submittal",
+      "acesssionNumber": "20250529-5210",
+      "filedDate": "05/29/2025",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Certificate of Public Convenience and Necessity"}],
+      "docketNumbers": ["CP17-101-007", "CP20-49-001"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Transcontinental Gas Pipe Line Company, LLC"}]
+    },
+    {
+      "description": "Transcontinental Gas Pipe Line Company, LLC submits supplemental information to the 05/29/2025 Petition for Expedited Reissuance under CP17-101, et al.",
+      "category": "Submittal",
+      "acesssionNumber": "20250606-5033",
+      "filedDate": "06/06/2025",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Certificate of Public Convenience and Necessity"}],
+      "docketNumbers": ["CP17-101-007", "CP20-49-001"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Transcontinental Gas Pipe Line Company, LLC"}]
+    },
+    {
+      "description": "Prior Notice of Blanket Certificate Activity of Stingray Pipeline Company, L.L.C. under CP19-478.",
+      "category": "Submittal",
+      "acesssionNumber": "20190605-5121",
+      "filedDate": "06/05/2019",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Certificate of Public Convenience and Necessity"}],
+      "docketNumbers": ["CP19-478-000"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Stingray Pipeline Company, L.L.C."}]
+    },
+    {
+      "description": "Application of Example LNG Terminal, LLC for authorization to site, construct, and operate the Example LNG Export Terminal Project in Cameron Parish, Louisiana under CP20-55.",
+      "category": "Submittal",
+      "acesssionNumber": "20200210-5010",
+      "filedDate": "02/10/2020",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Certificate of Public Convenience and Necessity"}],
+      "docketNumbers": ["CP20-55-000"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Example LNG Terminal, LLC"}]
+    },
+    {
+      "description": "Application of Example Denied Pipeline Co. for a Certificate of Public Convenience and Necessity to construct the Example Denied Lateral Project under CP19-999.",
+      "category": "Submittal",
+      "acesssionNumber": "20190501-5033",
+      "filedDate": "05/01/2019",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Certificate of Public Convenience and Necessity"}],
+      "docketNumbers": ["CP19-999-000"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Example Denied Pipeline Co."}]
+    },
+    {
+      "description": "Application of Example Ridge Pipeline, LLC for a Certificate of Public Convenience and Necessity to construct the Ridge Lateral Project under CP21-400.",
+      "category": "Submittal",
+      "acesssionNumber": "20210305-5002",
+      "filedDate": "03/05/2021",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Certificate of Public Convenience and Necessity"}],
+      "docketNumbers": ["CP21-400-000"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Example Ridge Pipeline, LLC"}]
+    }
+  ],
+  "cp_orders": [
+    {
+      "description": "Order Issuing Certificate re Transcontinental Gas Pipe Line Company LLC under CP17-101. Commissioner LaFleur is concurring with a separate statement attached.",
+      "category": "Issuance",
+      "acesssionNumber": "20190503-3049",
+      "filedDate": "05/03/2019",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Commission Order/Opinion"}],
+      "docketNumbers": ["CP17-101-000"]
+    },
+    {
+      "description": "Order Denying Rehearing and Stay re Transcontinental Gas Pipe Line Company, LLC under CP17-101.",
+      "category": "Issuance",
+      "acesssionNumber": "20200416-3088",
+      "filedDate": "04/16/2020",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Commission Order/Opinion"}],
+      "docketNumbers": ["CP17-101-001"]
+    },
+    {
+      "description": "Order Vacating Certificate and Dismissing Rehearing re Transcontinental Gas Pipe Line Company, LLC's Northeast Supply Enhancement Project under CP17-101.",
+      "category": "Issuance",
+      "acesssionNumber": "20240610-3041",
+      "filedDate": "06/10/2024",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Commission Order/Opinion"}],
+      "docketNumbers": ["CP17-101-000", "CP17-101-006"]
+    },
+    {
+      "description": "Order Issuing Certificate re Transcontinental Gas Pipe Line Company, LLC under CP17-101 et al.",
+      "category": "Issuance",
+      "acesssionNumber": "20250828-3061",
+      "filedDate": "08/28/2025",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Commission Order/Opinion"}],
+      "docketNumbers": ["CP17-101-007", "CP20-49-001"]
+    },
+    {
+      "description": "Errata Notice to the 08/28/2025 Order Issuing Certificate re Transcontinental Gas Pipe Line Company, LLC under CP17-101 et al.",
+      "category": "Issuance",
+      "acesssionNumber": "20250829-3002",
+      "filedDate": "08/29/2025",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Delegated Order"}],
+      "docketNumbers": ["CP17-101-007"]
+    },
+    {
+      "description": "Order Granting Authorization Under Section 3 of the Natural Gas Act re Example LNG Terminal, LLC's Example LNG Export Terminal Project under CP20-55.",
+      "category": "Issuance",
+      "acesssionNumber": "20211101-3020",
+      "filedDate": "11/01/2021",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Commission Order/Opinion"}],
+      "docketNumbers": ["CP20-55-000"]
+    },
+    {
+      "description": "Order Denying Certificate Application re Example Denied Pipeline Co. under CP19-999.",
+      "category": "Issuance",
+      "acesssionNumber": "20200815-3005",
+      "filedDate": "08/15/2020",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Commission Order/Opinion"}],
+      "docketNumbers": ["CP19-999-000"]
+    }
+  ],
+  "cp_withdrawals": [
+    {
+      "description": "Example Ridge Pipeline, LLC submits Notice of Withdrawal of its Application under CP21-400.",
+      "category": "Submittal",
+      "acesssionNumber": "20211207-5044",
+      "filedDate": "12/07/2021",
+      "classTypes": [{"documentClass": "Applicant Correspondence", "documentType": "Withdrawal of Application"}],
+      "docketNumbers": ["CP21-400-000"]
+    }
+  ],
+  "hydro_applications": [
+    {
+      "description": "Northern States Power Company - Wisconsin submits Draft License Application under P-2639.",
+      "category": "Submittal",
+      "acesssionNumber": "20210608-5104",
+      "filedDate": "06/08/2021",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "License/Relicense Application"}],
+      "docketNumbers": ["P-2639-001"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Northern States Power Company - Wisconsin"}]
+    },
+    {
+      "description": "Northern States Power Company - Wisconsin submits final license application for the relicensing of the Cornell Project under P-2639.",
+      "category": "Submittal",
+      "acesssionNumber": "20211130-5279",
+      "filedDate": "11/30/2021",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "License/Relicense Application"}],
+      "docketNumbers": ["P-2639-028"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Northern States Power Company - Wisconsin"}]
+    },
+    {
+      "description": "Appl. For License / Relicense of Xcel Energy Inc. under P-2639.",
+      "category": "Submittal",
+      "acesssionNumber": "20190516-5169",
+      "filedDate": "05/16/2019",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "License/Relicense Application"}],
+      "docketNumbers": ["P-2639-000"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "No Organization Found"}]
+    }
+  ],
+  "hydro_orders": [
+    {
+      "description": "Order Issuing New License re Northern States Power Company-Wisconsin's Cornell Hydroelectric Project under P-2639. ",
+      "category": "Issuance",
+      "acesssionNumber": "20260910-3052",
+      "filedDate": "09/10/2026",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Commission Order/Opinion"}],
+      "docketNumbers": ["P-2639-028"]
+    },
+    {
+      "description": "Letter to Xcel Energy granting the 12/05/2023 request for an extension of time to complete the Flashboard Walkway Replacement at the Cornell Hydroelectric Project under P-2639.",
+      "category": "Issuance",
+      "acesssionNumber": "20231214-3010",
+      "filedDate": "12/14/2023",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Delegated Order"}],
+      "docketNumbers": ["P-2639-000"]
+    }
+  ],
+  "el_applications": [
+    {
+      "description": "Complaint of Independent Market Monitor for PJM under EL19-47.",
+      "category": "Submittal",
+      "acesssionNumber": "20190221-5133",
+      "filedDate": "02/21/2019",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Complaints"}],
+      "docketNumbers": ["EL19-47-000"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "Independent Market Monitor for PJM"}]
+    },
+    {
+      "description": "PJM Interconnection, L.L.C. submits tariff filing per 35: Compliance Filing to be effective 10/1/2022 under EL19-47.",
+      "category": "Submittal",
+      "acesssionNumber": "20220923-5088",
+      "filedDate": "09/23/2022",
+      "classTypes": [{"documentClass": "Application/Petition/Request", "documentType": "Complaints"}],
+      "docketNumbers": ["EL19-47-003"],
+      "affiliations": [{"afType": "AUTHOR", "affiliation": "PJM Interconnection, L.L.C."}]
+    }
+  ],
+  "el_orders": [
+    {
+      "description": "Order Granting Complaints and Ordering Additional Briefing re Independent Market Monitor for PJM et al v. PJM Interconnection, LLC under EL19-47 et al.",
+      "category": "Issuance",
+      "acesssionNumber": "20210318-3090",
+      "filedDate": "03/18/2021",
+      "classTypes": [{"documentClass": "Order/Opinion", "documentType": "Commission Order/Opinion"}],
+      "docketNumbers": ["EL19-47-000", "EL19-63-000"]
+    }
+  ]
+}
