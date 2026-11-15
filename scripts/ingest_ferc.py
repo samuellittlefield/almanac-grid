@@ -208,7 +208,7 @@ _DENIAL_RES = {
 
 _STATE_ABBREVIATIONS = {
     "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA",
-    "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA",
+    "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA", "hawaii": "HI",
     "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS",
     "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD", "massachusetts": "MA",
     "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO", "montana": "MT",
@@ -220,10 +220,13 @@ _STATE_ABBREVIATIONS = {
     "wisconsin": "WI", "wyoming": "WY",
 }
 # Longest names first so "West Virginia" isn't read as "Virginia".
+# Only where the state is given as a place ("in Greene County, Pennsylvania").
+# A bare state name is usually part of a company name ("Texas Eastern
+# Transmission"), which says nothing about where the project is.
 _STATE_RE = re.compile(
-    r"\b("
+    r"(?:\b(?:County|Counties|Parish|Parishes|Borough|Township),|\b(?:in|near|offshore))\s+("
     + "|".join(re.escape(name) for name in sorted(_STATE_ABBREVIATIONS, key=len, reverse=True))
-    + r")\b",
+    + r")\b(?!\s+(?:Gas|Power|Electric|Public|Energy|Pipeline|Transmission|Department|State))",
     re.I,
 )
 
