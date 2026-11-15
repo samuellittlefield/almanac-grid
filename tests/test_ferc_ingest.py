@@ -200,6 +200,15 @@ def test_extract_applicant_from_order_description():
     assert extract_project_name(hit["description"]) == "Rumford Falls Hydroelectric Project"
 
 
+def test_applicant_name_keeps_its_trailing_period():
+    hit = {
+        "category": "Submittal",
+        "description": "Application of Erie Boulevard Hydropower, L.P. for a new license under P-2713.",
+        "affiliations": [{"afType": "AUTHOR", "affiliation": "Erie Boulevard Hydropower, L.P."}],
+    }
+    assert extract_applicant(hit) == "Erie Boulevard Hydropower, L.P."
+
+
 def test_extract_region():
     assert extract_region("pipeline facilities in Greene County, Pennsylvania") == "PA"
     assert extract_region("facilities in Kanawha County, West Virginia") == "WV"

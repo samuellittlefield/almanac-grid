@@ -246,7 +246,8 @@ _PLACEHOLDER_AUTHORS = {"no organization found", "individual", "individual no af
 def _clean(text: str | None) -> str | None:
     if not text:
         return None
-    return re.sub(r"\s+", " ", text).strip(" ,.") or None
+    # Periods stay: they end "L.P." and "Inc.", not sentences.
+    return re.sub(r"\s+", " ", text).strip(" ,") or None
 
 
 def extract_applicant(hit: dict) -> str | None:
