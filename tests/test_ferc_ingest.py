@@ -258,22 +258,27 @@ def test_upsert_updates_a_pending_action_once_it_is_decided(db_session):
     assert (action.outcome, action.decision_date) == ("approved", datetime.date(2025, 2, 1))
 
 
-def test_search_pages_are_requested_from_page_one(monkeypatch):
-    """FERC's API returns page 1 for both curPage 0 and 1; starting at 0 would
-    repeat the first page and never reach the last."""
-    requested = []
+def test_search_splits_the_date_range_instead_of_paging(monkeypatch):
+    """FERC's result order is unstable between page requests, so a query that
+    overflows one page is split by date until every piece fits in one."""
+    filed = [datetime.date(2020, 1, 1) + datetime.timedelta(days=30 * i) for i in range(7)]
+    requests_made = []
 
     def fake_post(session, body):
-        requested.append(body["curPage"])
-        page = body["curPage"]
-        return {"success": True, "totalHits": 5, "searchHits": [{"n": i} for i in range((page - 1) * 2, min(page * 2, 5))]}
+        search = body["dateSearches"][0]
+        start = datetime.date.fromisoformat(search["startDate"])
+        end = datetime.date.fromisoformat(search["endDate"])
+        requests_made.append(body["curPage"])
+        matching = [{"n": i} for i, day in enumerate(filed) if start <= day <= end]
+        return {"success": True, "totalHits": len(matching), "searchHits": matching[: body["resultsPerPage"]]}
 
     monkeypatch.setattr(ingest_ferc, "_post_with_retry", fake_post)
     hits = list(
         ingest_ferc.iter_search_hits(
-            None, "CP19", ["Issuance"], "Order/Opinion", "Commission Order/Opinion",
-            WINDOW_START, datetime.date(2026, 1, 1), page_size=2, sleep_seconds=0,
+            None, "P", ["Issuance"], "Order/Opinion", "Delegated Order",
+            datetime.date(2020, 1, 1), datetime.date(2020, 12, 31), page_size=3, sleep_seconds=0,
         )
     )
-    assert requested == [1, 2, 3]
-    assert [h["n"] for h in hits] == [0, 1, 2, 3, 4]
+    assert sorted(h["n"] for h in hits) == [0, 1, 2, 3, 4, 5, 6]
+    # Every request asked for page 1 (the API's first page; 0 is an alias for it).
+    assert set(requests_made) == {1}

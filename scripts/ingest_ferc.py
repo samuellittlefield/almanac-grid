@@ -29,7 +29,7 @@ import argparse
 import re
 import time
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from typing import Iterable, Iterator
 
 import requests
@@ -496,19 +496,22 @@ def iter_search_hits(
     page_size: int = DEFAULT_PAGE_SIZE,
     sleep_seconds: float = DEFAULT_SLEEP_SECONDS,
 ) -> Iterator[dict]:
-    page = 1  # the API treats page 0 as page 1, so counting from 0 repeats it
-    while True:
+    """Yield every hit for one query.
+
+    FERC's result order is not stable from one page request to the next, so
+    paging through a large result set repeats some hits and silently drops
+    others. Instead, a query that doesn't fit in one page is split by date
+    until each piece does.
+    """
+
+    def search(start: date, end: date, page: int) -> dict:
         body = {
             "searchText": search_text,
             # A keyword is matched against descriptions only, not document text.
             "searchFullText": search_text == "*",
             "searchDescription": True,
             "dateSearches": [
-                {
-                    "dateType": "filed_date",
-                    "startDate": start_date.isoformat(),
-                    "endDate": end_date.isoformat(),
-                }
+                {"dateType": "filed_date", "startDate": start.isoformat(), "endDate": end.isoformat()}
             ],
             "availability": None,
             "affiliations": [],
@@ -518,7 +521,7 @@ def iter_search_hits(
             "eFiling": False,
             "docketSearches": [{"docketNumber": docket_number, "subDocketNumbers": []}],
             "resultsPerPage": page_size,
-            "curPage": page,
+            "curPage": page,  # 1-based: the API returns page 1 for both 0 and 1
             "classTypes": [{"documentClass": document_class, "documentType": document_type}],
             "sortBy": "",
             "groupBy": "NONE",
@@ -528,12 +531,25 @@ def iter_search_hits(
         data = _post_with_retry(session, body)
         if not data.get("success", True):
             raise RuntimeError(f"FERC search failed for {docket_number}: {data.get('errorMessage')}")
-        hits = data.get("searchHits") or []
-        yield from hits
-        if not hits or page * page_size >= (data.get("totalHits") or 0):
-            return
-        page += 1
         time.sleep(sleep_seconds)
+        return data
+
+    pending = [(start_date, end_date)]
+    while pending:
+        start, end = pending.pop()
+        data = search(start, end, 1)
+        hits = data.get("searchHits") or []
+        total = data.get("totalHits") or 0
+        if total <= len(hits):
+            yield from hits
+        elif start < end:
+            middle = start + (end - start) // 2
+            pending += [(middle + timedelta(days=1), end), (start, middle)]
+        else:
+            # More than a page filed on a single day: paging is all that's left.
+            yield from hits
+            for page in range(2, -(-total // page_size) + 1):
+                yield from search(start, end, page).get("searchHits") or []
 
 
 def _post_with_retry(session: requests.Session, body: dict, attempts: int = 4) -> dict:
