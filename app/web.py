@@ -18,7 +18,9 @@ from app.database import get_db
 PAGE_SIZE = 50
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
-templates.env.filters["label"] = lambda value: (value or "").replace("_", " ").capitalize()
+templates.env.filters["label"] = (
+    lambda value: (value or "").replace("_", " ").capitalize().replace("Lng", "LNG")
+)
 templates.env.filters["pct"] = lambda value: "—" if value is None else f"{value * 100:.1f}%"
 
 router = APIRouter(include_in_schema=False)
