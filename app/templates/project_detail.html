@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} · Almanac Grid{% endblock %}
+{% block content %}
+<p><a href="/ui/projects">← All projects</a></p>
+<h1>{{ project.name }}</h1>
+<dl>
+  <dt>Project type</dt><dd>{{ project.project_type | label }}</dd>
+  <dt>Applicant</dt><dd>{{ project.applicant }}</dd>
+  <dt>Region</dt><dd>{{ project.region or "—" }}</dd>
+</dl>
+
+<h2>Agency actions</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Agency</th><th>Docket</th><th>Action</th><th>Filed</th><th>Decided</th><th class="num">Days</th><th>Outcome</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+      {% for action in project.actions %}
+      <tr>
+        <td>{{ action.agency }}</td>
+        <td>{{ action.docket_number }}</td>
+        <td>{{ action.action_type | label }}</td>
+        <td>{{ action.filed_date or "—" }}</td>
+        <td>{{ action.decision_date or "—" }}</td>
+        <td class="num">{% if action.filed_date and action.decision_date %}{{ (action.decision_date - action.filed_date).days }}{% else %}—{% endif %}</td>
+        <td><span class="outcome {{ action.outcome }}">{{ action.outcome }}</span></td>
+        <td>{% if action.source_url %}<a href="{{ action.source_url }}" rel="noopener" target="_blank">FERC eLibrary</a>{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

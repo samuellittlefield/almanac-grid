@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Permitting trends · Almanac Grid{% endblock %}
+{% block content %}
+<h1>Federal permitting outcomes</h1>
+<p class="muted">FERC decisions by project type. Rates are shares of decided actions; time to decision runs from filing to the deciding order or withdrawal.</p>
+
+<form class="filters" method="get" action="/">
+  <label>Filed from <input type="date" name="start_date" value="{{ start_date or '' }}"></label>
+  <label>Filed to <input type="date" name="end_date" value="{{ end_date or '' }}"></label>
+  <button type="submit">Apply</button>
+  {% if start_date or end_date %}<a href="/">Clear</a>{% endif %}
+</form>
+
+{% if not trends %}
+<p>No permitting actions in this range yet. Run <code>python -m scripts.ingest_ferc</code> to load FERC data.</p>
+{% else %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Project type</th>
+        <th class="num">Actions</th>
+        <th class="num">Approved</th>
+        <th class="num">Denied</th>
+        <th class="num">Withdrawn</th>
+        <th class="num">Pending</th>
+        <th class="num">Approval rate</th>
+        <th class="num">Denial rate</th>
+        <th class="num">Withdrawal rate</th>
+        <th class="num">Avg days to decision</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in trends %}
+      <tr>
+        <td><a href="/ui/projects?project_type={{ row.project_type }}">{{ row.project_type | label }}</a></td>
+        <td class="num">{{ row.total_actions }}</td>
+        <td class="num">{{ row.approved }}</td>
+        <td class="num">{{ row.denied }}</td>
+        <td class="num">{{ row.withdrawn }}</td>
+        <td class="num">{{ row.pending }}</td>
+        <td class="num">{{ row.approval_rate | pct }}</td>
+        <td class="num">{{ row.denial_rate | pct }}</td>
+        <td class="num">{{ row.withdrawal_rate | pct }}</td>
+        <td class="num">{{ row.avg_days_to_decision if row.avg_days_to_decision is not none else "—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Actions filed per year</h2>
+<div class="chart"><canvas id="filed-chart"></canvas></div>
+
+<h2>Average days to decision, by filing year</h2>
+<div class="chart"><canvas id="days-chart"></canvas></div>
+
+{% for row in trends %}
+<h2>{{ row.project_type | label }} by filing year</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Year filed</th>
+        <th class="num">Actions</th>
+        <th class="num">Approved</th>
+        <th class="num">Denied</th>
+        <th class="num">Withdrawn</th>
+        <th class="num">Pending</th>
+        <th class="num">Approval rate</th>
+        <th class="num">Avg days to decision</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for year in row.by_year %}
+      <tr>
+        <td>{{ year.year }}</td>
+        <td class="num">{{ year.total_actions }}</td>
+        <td class="num">{{ year.approved }}</td>
+        <td class="num">{{ year.denied }}</td>
+        <td class="num">{{ year.withdrawn }}</td>
+        <td class="num">{{ year.pending }}</td>
+        <td class="num">{{ year.approval_rate | pct }}</td>
+        <td class="num">{{ year.avg_days_to_decision if year.avg_days_to_decision is not none else "—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const COLORS = ["#1f5f8b", "#c2571a", "#2e8b57", "#7a4fa3", "#8c2222", "#5d6b7a"];
+  const label = (s) => s.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+
+  fetch("/trends" + window.location.search)
+    .then((response) => response.json())
+    .then((trends) => {
+      const years = [...new Set(trends.flatMap((t) => t.by_year.map((y) => y.year)))].sort();
+      const series = (field) => trends.map((t, i) => {
+        const byYear = Object.fromEntries(t.by_year.map((y) => [y.year, y[field]]));
+        return {
+          label: label(t.project_type),
+          data: years.map((year) => byYear[year] ?? null),
+          borderColor: COLORS[i % COLORS.length],
+          backgroundColor: COLORS[i % COLORS.length],
+          spanGaps: true,
+        };
+      });
+      const options = { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } };
+      new Chart(document.getElementById("filed-chart"), {
+        type: "bar",
+        data: { labels: years, datasets: series("total_actions") },
+        options,
+      });
+      new Chart(document.getElementById("days-chart"), {
+        type: "line",
+        data: { labels: years, datasets: series("avg_days_to_decision") },
+        options,
+      });
+    });
+</script>
+{% endif %}
+{% endblock %}

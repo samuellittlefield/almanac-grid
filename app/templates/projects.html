@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Projects · Almanac Grid{% endblock %}
+{% block content %}
+<h1>Projects</h1>
+<p class="muted">{{ result.total }} project{{ "" if result.total == 1 else "s" }} match.</p>
+
+<form class="filters" method="get" action="/ui/projects">
+  <label>Project type
+    <select name="project_type">
+      <option value="">All</option>
+      {% for value in options.project_types %}
+      <option value="{{ value }}" {{ "selected" if value == filters.project_type }}>{{ value | label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Applicant <input type="text" name="applicant" value="{{ filters.applicant or '' }}" placeholder="Name contains…"></label>
+  <label>Region
+    <select name="region">
+      <option value="">All</option>
+      {% for value in options.regions %}
+      <option value="{{ value }}" {{ "selected" if value == filters.region }}>{{ value }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Filed from <input type="date" name="start_date" value="{{ filters.start_date or '' }}"></label>
+  <label>Filed to <input type="date" name="end_date" value="{{ filters.end_date or '' }}"></label>
+  <button type="submit">Search</button>
+  <a href="/ui/projects">Clear</a>
+</form>
+
+{% if result["items"] %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Project</th><th>Type</th><th>Applicant</th><th>Region</th><th>Docket</th><th>Filed</th><th>Outcome</th></tr>
+    </thead>
+    <tbody>
+      {% for project in result["items"] %}
+      {% set action = project.actions[0] if project.actions else none %}
+      <tr>
+        <td class="wrap"><a href="/ui/projects/{{ project.id }}">{{ project.name }}</a></td>
+        <td>{{ project.project_type | label }}</td>
+        <td class="wrap">{{ project.applicant }}</td>
+        <td>{{ project.region or "—" }}</td>
+        <td>{{ action.docket_number if action else "—" }}</td>
+        <td>{{ action.filed_date if action and action.filed_date else "—" }}</td>
+        <td>{% if action %}<span class="outcome {{ action.outcome }}">{{ action.outcome }}</span>{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="pager">
+  {% if page > 1 %}<a href="/ui/projects?{{ query }}{{ '&' if query }}page={{ page - 1 }}">← Previous</a>{% endif %}
+  <span class="muted">Page {{ page }} of {{ pages }}</span>
+  {% if page < pages %}<a href="/ui/projects?{{ query }}{{ '&' if query }}page={{ page + 1 }}">Next →</a>{% endif %}
+</div>
+{% else %}
+<p>No projects match these filters.</p>
+{% endif %}
+{% endblock %}
