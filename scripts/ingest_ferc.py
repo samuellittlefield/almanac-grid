@@ -151,6 +151,18 @@ _GAS_NOT_APPLICATION_RE = re.compile(
     re.I,
 )
 _ABANDONMENT_RE = re.compile(r"\babandon", re.I)
+# The hydro license-application document type is also used for license
+# transfers, amendments and compliance filings under license articles.
+_HYDRO_APPLICATION_RE = re.compile(
+    r"licen[sc]e application|appl\w*\.? for (?:(?:a|an|new|original|subsequent|minor|major)\s+)*licen[sc]e|"
+    r"relicens|exemption",
+    re.I,
+)
+_HYDRO_NOT_APPLICATION_RE = re.compile(
+    r"transfer|amend|\barticle \d|as-built|surrender|extension|preliminary permit|pursuant to|"
+    r"supplement|additional information|notice of|proof of",
+    re.I,
+)
 _BUILD_RE = re.compile(r"certificat|construct|section 3|authori[sz]ation to (?:site|construct)", re.I)
 
 # Only Commission/Director orders decide applications. Errata, notices and
@@ -355,6 +367,10 @@ def _is_application(config: DocketPrefixConfig, docket: str, description: str) -
         # permission to build.
         if _ABANDONMENT_RE.search(description) and not _BUILD_RE.search(description):
             return False
+    if config.prefix == "P" and (
+        not _HYDRO_APPLICATION_RE.search(description) or _HYDRO_NOT_APPLICATION_RE.search(description)
+    ):
+        return False
     if config.year_coded and _sub_docket(docket) != "000":
         # Later sub-dockets also collect supplements and compliance filings;
         # only a new request starts a new action.

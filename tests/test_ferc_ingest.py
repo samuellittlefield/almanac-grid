@@ -128,6 +128,25 @@ def test_hydro_relicense_keeps_only_the_decided_application(sample):
     assert record.decision_date == datetime.date(2026, 9, 10)
 
 
+@pytest.mark.parametrize(
+    "description,expected",
+    [
+        ("PE Hydro Generation, LLC submits Final License Application for the Warren Hydroelectric Project under P-2391.", True),
+        ("Application For License of Fall River Electric Cooperative for the Felt Hydroelectric Project under P-5089.", True),
+        ("Appl. For License / Relicense of Xcel Energy Inc. under P-2639.", True),
+        ("Benton Falls Associates Application for Approval for Partial Transfer of License for the Benton Falls Hydroelectric Project under P-5073.", False),
+        ("Goodyear Lake Hydro, LLC files the Temporary Upstream American Eel Passage Design and Methodology pursuant to Article 401 for the Colliersville Hydroelectric Project under P-2788.", False),
+        ("Eugene Water & Electric Board submits the Article 205-As-built Drawings, Request for Amendment of Exhibit A etc. under P-2242.", False),
+        ("Northern States Power Company - Wisconsin submits Draft License Application under P-2639.", False),
+    ],
+)
+def test_hydro_license_document_type_is_filtered_to_real_applications(description, expected):
+    records: dict[str, ActionRecord] = {}
+    hit = {"description": description, "category": "Submittal", "filedDate": "01/03/2022", "docketNumbers": ["P-1-005"]}
+    merge_application_hit(records, hit, P_CONFIG, "license_application")
+    assert bool(records) is expected
+
+
 def test_el_complaint(sample):
     records = _parse(sample, EL_CONFIG, "el")
 
