@@ -21,7 +21,10 @@ class Project(Base):
     )
 
     actions: Mapped[list["AgencyAction"]] = relationship(
-        "AgencyAction", back_populates="project", cascade="all, delete-orphan"
+        "AgencyAction",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        order_by="AgencyAction.filed_date, AgencyAction.id",
     )
 
 
