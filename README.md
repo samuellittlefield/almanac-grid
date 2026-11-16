@@ -54,7 +54,7 @@ order FERC issued under that same sub-docket.
 |---|---|---|
 | `CP` | `natural_gas_pipeline`, or `lng_terminal` when the filing mentions LNG / liquefaction | Certificate applications and later amendments or petitions |
 | `P` | `hydroelectric` | License and relicense applications |
-| `EL` | `electric_transmission` | Complaints and petitions for declaratory order |
+| `EL` | `electric_complaint` | Complaints and petitions for declaratory order |
 
 Outcomes are read from the wording of FERC's order titles ("Order Issuing
 Certificate", "Order Denying ...") and from withdrawal notices. Things to know
@@ -68,10 +68,10 @@ about the result:
 - **Not everything on a CP docket is an application.** Blanket-certificate
   prior-notice filings (which take effect without an order) and
   abandonment-only requests are skipped.
-- **EL dockets are broader than transmission.** EL is FERC's general electric
-  docket, mostly market and rate disputes, and the search results don't say
-  what a given complaint is about, so every original EL complaint or petition
-  is ingested under `electric_transmission`.
+- **EL dockets are not transmission permitting.** EL is FERC's general
+  electric docket, mostly market and rate disputes, and the search results
+  don't say what a given complaint is about, so every original EL complaint or
+  petition is ingested under `electric_complaint`.
 - **Hydro:** preliminary permits, license transfers and amendments are not
   tracked, and an application filed before the window is only included if its
   decision falls inside it. Filing years before the window therefore show only

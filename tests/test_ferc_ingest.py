@@ -155,7 +155,7 @@ def test_el_complaint(sample):
     assert list(records) == ["EL19-47-000"]
     record = records["EL19-47-000"]
     assert record.action_type == "complaint"
-    assert record.project_type == "electric_transmission"
+    assert record.project_type == "electric_complaint"
     assert record.outcome == "approved"
     assert record.decision_date == datetime.date(2021, 3, 18)
 
@@ -182,9 +182,9 @@ def test_records_outside_the_window_are_dropped(sample):
         ("Order Issuing Preliminary Permit and Granting Priority to File License Application re X under P-15425.", "hydroelectric", None),
         ("Order Denying Extension of License Term re Ampersand Ogdensburg Hydro, LLC under P-9821.", "hydroelectric", None),
         ("Letter to WEC Energy Group denying the request for an exemption from 18 CFR Part 12 under P-1.", "hydroelectric", None),
-        ("Order Denying Complaint re A v. B under EL20-1.", "electric_transmission", "denied"),
-        ("Order Granting in Part and Denying in Part Complaint re A v. B under EL20-2.", "electric_transmission", "approved"),
-        ("Order on Complaint re A v. B under EL21-61.", "electric_transmission", None),
+        ("Order Denying Complaint re A v. B under EL20-1.", "electric_complaint", "denied"),
+        ("Order Granting in Part and Denying in Part Complaint re A v. B under EL20-2.", "electric_complaint", "approved"),
+        ("Order on Complaint re A v. B under EL21-61.", "electric_complaint", None),
     ],
 )
 def test_classify_decision(description, project_type, expected):

@@ -75,6 +75,13 @@ obtainable (not just "exists somewhere behind a FOIA request"):
   (interconnection and the bill's new backstop siting authority).
 - A trend view and project-level detail, backed by real ingested FERC data.
 
+  **Note from implementation:** FERC's EL docket type — the only one that
+  fit "electric" at ingestion time — turned out to be general electric
+  complaint/rate-dispute dockets, not transmission siting. v1 ingests that
+  data under `electric_complaint` instead; see docs/spec.md and the README's
+  docket-type table. Real interconnection/siting data needs a different
+  source and is not in v1.
+
 ### Deferred, and why
 
 - **BLM PALS integration** — public-domain and ready to use, but deferred to

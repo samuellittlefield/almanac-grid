@@ -117,7 +117,7 @@ P_CONFIG = DocketPrefixConfig(
 EL_CONFIG = DocketPrefixConfig(
     prefix="EL",
     year_coded=True,
-    project_type="electric_transmission",
+    project_type="electric_complaint",
     application_types=(
         ("Complaints", "complaint"),
         ("Petition for Declaratory Order", "declaratory_order_petition"),
@@ -185,7 +185,7 @@ _APPROVAL_RES = {
         rf"\b(?:issuing|granting)\s+{_MODIFIER}(?:licen[sc]e\b|exemption from licens)", re.I
     ),
     # Includes "Granting in Part and Denying in Part": the filer got relief.
-    "electric_transmission": re.compile(
+    "electric_complaint": re.compile(
         r"\bgranting\b[^.]{0,60}?\b(?:complaint|petition|declaratory)", re.I
     ),
 }
@@ -201,7 +201,7 @@ _DENIAL_RES = {
         r"relicens\w+|exemption application|application for exemption)",
         re.I,
     ),
-    "electric_transmission": re.compile(
+    "electric_complaint": re.compile(
         r"\b(?:denying|rejecting|dismissing)\b[^.]{0,60}?\b(?:complaint|petition|declaratory)", re.I
     ),
 }
@@ -296,7 +296,7 @@ def classify_decision(description: str, project_type: str) -> str | None:
     if not _IS_ORDER_RE.search(description or ""):
         return None
     family = "gas" if project_type in ("natural_gas_pipeline", "lng_terminal") else project_type
-    if family == "electric_transmission" and _EL_PROCEDURAL_RE.search(description):
+    if family == "electric_complaint" and _EL_PROCEDURAL_RE.search(description):
         return None
     if _APPROVAL_RES[family].search(description):
         return "approved"

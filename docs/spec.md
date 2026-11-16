@@ -23,7 +23,7 @@ The repo already has a scaffold:
 |---|---|---|
 | id | pk | |
 | name | string | |
-| project_type | string | normalized category — `natural_gas_pipeline`, `lng_terminal`, `hydroelectric`, `electric_transmission` |
+| project_type | string | normalized category — `natural_gas_pipeline`, `lng_terminal`, `hydroelectric`, `electric_complaint` |
 | applicant | string | |
 | region | string | state/region only — no parcel-level geometry in v1 |
 | created_at | datetime | |
