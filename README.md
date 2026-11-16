@@ -31,7 +31,7 @@ ingestion script the first time it runs.
 
 With no arguments this backfills the last 10 years (from January 1, ten years
 back, to today) for every docket type. It makes a few hundred requests to
-FERC's eLibrary search and takes about eight minutes. It is safe to re-run at
+FERC's eLibrary search and takes 5 to 10 minutes. It is safe to re-run at
 any time, by hand or from cron: rows are upserted, so a pending application
 picks up its decision on a later run instead of being duplicated.
 
