@@ -33,9 +33,9 @@ SEARCH_RESULTS_URL = BASE_URL + "/searchresults/"
 PROJECT_URL = BASE_URL + "/Project-Home/?id={project_id}"
 USER_AGENT = "almanac-grid-ingest/2.0"
 MIN_INTERVAL_SECONDS = 0.5
-# Pages take one to two seconds to serve, so four in flight keep close to the
+# Uncached pages take 2-4 seconds to serve, so eight in flight keep close to the
 # 2 requests/s limit without exceeding it.
-PAGE_WORKERS = 4
+PAGE_WORKERS = 8
 
 # Program filter ids on the search page (option values of #programDropdown).
 PROGRAMS = {
@@ -69,7 +69,7 @@ _TAG_RE = re.compile(r"<[^>]+>")
 # segment suffix either attached ("CA-956A") or after a separator
 # ("CACA 053213-03", "CACA-58539 07"). Covers legacy LR2000 serials
 # ("AZA 037939", "NVN-91234") and MLRS serials ("NVNV105123456").
-_SERIAL_RE = re.compile(r"\b([A-Z]{1,6})[\s-]*(\d{1,9})(?:[A-Z]{1,2}\b|[\s-]\d{2}\b)?")
+_SERIAL_RE = re.compile(r"\b([A-Z]{1,6})[\s_-]*(\d{1,9})(?:[A-Z]{1,2}\b|[\s-]\d{2}\b)?")
 
 
 def serial_keys(text: str | None) -> set[str]:
