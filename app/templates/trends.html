@@ -2,23 +2,41 @@
 {% block title %}Permitting trends · Almanac Grid{% endblock %}
 {% block content %}
 <h1>Federal permitting outcomes</h1>
-<p class="muted">FERC decisions by project type. Rates are shares of decided actions; time to decision runs from filing to the deciding order or withdrawal.</p>
+<p class="muted">FERC and BLM decisions by project type. Rates are shares of decided actions; time to decision runs from filing to the deciding order, grant, rejection or withdrawal.</p>
 
 <form class="filters" method="get" action="/">
+  <label>Agency
+    <select name="agency">
+      <option value="">FERC and BLM</option>
+      {% for value in ["FERC", "BLM"] %}
+      <option value="{{ value }}" {{ "selected" if value == agency }}>{{ value }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>BLM pipelines &amp; transmission
+    <select name="major_only">
+      <option value="true" {{ "selected" if major_only }}>Major projects only (EA or EIS)</option>
+      <option value="false" {{ "selected" if not major_only }}>All cases</option>
+    </select>
+  </label>
   <label>Filed from <input type="date" name="start_date" value="{{ start_date or '' }}"></label>
   <label>Filed to <input type="date" name="end_date" value="{{ end_date or '' }}"></label>
   <button type="submit">Apply</button>
-  {% if start_date or end_date %}<a href="/">Clear</a>{% endif %}
+  {% if start_date or end_date or agency or not major_only %}<a href="/">Clear</a>{% endif %}
 </form>
+{% if major_only %}
+<p class="muted">BLM pipeline and electric transmission rows count only cases linked to an ePlanning EA or EIS; most of these cases are small gathering and distribution lines. A major project whose NEPA record isn't linked to its case on ePlanning is left out. Choose "All cases" to see them all.</p>
+{% endif %}
 
 {% if not trends %}
-<p>No permitting actions in this range yet. Run <code>python -m scripts.ingest_ferc</code> to load FERC data.</p>
+<p>No permitting actions in this range yet. Run <code>python -m scripts.ingest_ferc</code> and <code>python -m scripts.ingest_blm</code> to load data.</p>
 {% else %}
 <div class="table-wrap">
   <table>
     <thead>
       <tr>
         <th>Project type</th>
+        <th>Agency</th>
         <th class="num">Actions</th>
         <th class="num">Approved</th>
         <th class="num">Denied</th>
@@ -34,7 +52,8 @@
     <tbody>
       {% for row in trends %}
       <tr>
-        <td><a href="/ui/projects?project_type={{ row.project_type }}">{{ row.project_type | label }}</a></td>
+        <td><a href="/ui/projects?project_type={{ row.project_type }}&amp;agency={{ row.agency }}">{{ row.project_type | label }}</a></td>
+        <td>{{ row.agency }}</td>
         <td class="num">{{ row.total_actions }}</td>
         <td class="num">{{ row.approved }}</td>
         <td class="num">{{ row.denied }}</td>
@@ -58,7 +77,7 @@
 <div class="chart"><canvas id="days-chart"></canvas></div>
 
 {% for row in trends %}
-<h2>{{ row.project_type | label }} by filing year</h2>
+<h2>{{ row.project_type | label }} ({{ row.agency }}) by filing year</h2>
 <div class="table-wrap">
   <table>
     <thead>
@@ -96,16 +115,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
   const COLORS = ["#1f5f8b", "#c2571a", "#2e8b57", "#7a4fa3", "#8c2222", "#5d6b7a"];
-  const label = (s) => s.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()).replace("Lng", "LNG");
+  const TYPE_LABELS = {{ type_labels | tojson }};
+  const label = (s) => TYPE_LABELS[s] || s.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()).replace("Lng", "LNG");
 
-  fetch("/trends" + window.location.search)
+  fetch("/trends?{{ api_query | safe }}")
     .then((response) => response.json())
     .then((trends) => {
       const years = [...new Set(trends.flatMap((t) => t.by_year.map((y) => y.year)))].sort();
       const series = (field) => trends.map((t, i) => {
         const byYear = Object.fromEntries(t.by_year.map((y) => [y.year, y[field]]));
         return {
-          label: label(t.project_type),
+          label: `${label(t.project_type)} (${t.agency})`,
           data: years.map((year) => byYear[year] ?? null),
           borderColor: COLORS[i % COLORS.length],
           backgroundColor: COLORS[i % COLORS.length],

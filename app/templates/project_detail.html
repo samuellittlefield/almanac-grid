@@ -3,17 +3,27 @@
 {% block content %}
 <p><a href="/ui/projects">← All projects</a></p>
 <h1>{{ project.name }}</h1>
+{% set agencies = project.actions | map(attribute="agency") | unique | list %}
+{% set blm_actions = project.actions | selectattr("agency", "equalto", "BLM") | list %}
 <dl>
+  <dt>Agency</dt><dd>{{ agencies | join(", ") if agencies else "—" }}</dd>
   <dt>Project type</dt><dd>{{ project.project_type | label }}</dd>
   <dt>Applicant</dt><dd>{{ project.applicant }}</dd>
   <dt>Region</dt><dd>{{ project.region | replace(",", ", ") if project.region else "—" }}</dd>
+  {% for action in blm_actions %}
+  <dt>BLM serial</dt><dd>{% if action.source_url %}<a href="{{ action.source_url }}" rel="noopener" target="_blank">{{ action.docket_number }}</a> (MLRS){% else %}{{ action.docket_number }}{% endif %}</dd>
+  <dt>NEPA review</dt><dd>{{ action.review_tier | upper if action.review_tier else "Unknown (no linked ePlanning project)" }}</dd>
+  {% endfor %}
 </dl>
+{% if project.project_type == "geothermal" %}
+<p class="muted">A geothermal lease grants the right to explore and develop the resource. It comes before, and isn't, the power plant's permit.</p>
+{% endif %}
 
 <h2>Agency actions</h2>
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Agency</th><th>Docket</th><th>Action</th><th>Filed</th><th>Decided</th><th class="num">Days</th><th>Outcome</th><th>Source</th></tr>
+      <tr><th>Agency</th><th>Docket / serial</th><th>Action</th><th>Filed</th><th>Decided</th><th class="num">Days</th><th>Outcome</th><th>NEPA review</th><th>Source</th></tr>
     </thead>
     <tbody>
       {% for action in project.actions %}
@@ -25,7 +35,8 @@
         <td>{{ action.decision_date or "—" }}</td>
         <td class="num">{% if action.filed_date and action.decision_date %}{{ (action.decision_date - action.filed_date).days }}{% else %}—{% endif %}</td>
         <td><span class="outcome {{ action.outcome }}">{{ action.outcome | replace("_", " ") }}</span></td>
-        <td>{% if action.source_url %}<a href="{{ action.source_url }}" rel="noopener" target="_blank">FERC eLibrary</a>{% else %}—{% endif %}</td>
+        <td>{{ action.review_tier | upper if action.review_tier else "—" }}</td>
+        <td>{% if action.source_url %}<a href="{{ action.source_url }}" rel="noopener" target="_blank">{{ "MLRS case" if action.agency == "BLM" else "FERC eLibrary" }}</a>{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>

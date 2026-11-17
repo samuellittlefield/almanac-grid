@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 
-from sqlalchemy import func, literal, select
+from sqlalchemy import func, literal, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import AgencyAction, Project
@@ -11,6 +11,11 @@ DECIDED_OUTCOMES = ("approved", "denied", "withdrawn")
 # Decided on a known date but in an unknown direction: counts toward time to
 # decision, not toward the approval/denial/withdrawal rates.
 TIMED_OUTCOMES = DECIDED_OUTCOMES + ("outcome_unclear",)
+AGENCIES = ("FERC", "BLM")
+# BLM line types where thousands of small gathering / distribution lines swamp
+# the handful of real projects. `major_only` restricts these to actions that
+# went through an EA or EIS; other types have no such noise and are left alone.
+MAJOR_FILTER_TYPES = ("electric_transmission", "oil_gas_pipeline", "co2_pipeline")
 
 
 def _apply_filed_range(stmt, start_date: datetime.date | None, end_date: datetime.date | None):
@@ -49,24 +54,38 @@ def get_trends(
     db: Session,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
+    agency: str | None = None,
+    major_only: bool = False,
 ) -> list[dict]:
-    """Outcome rates and time-to-decision by project_type, with a per-year
-    breakdown keyed on the year each action was filed."""
+    """Outcome rates and time-to-decision by project_type (and the agency
+    that decides it), with a per-year breakdown keyed on the year each action
+    was filed."""
     stmt = select(
         Project.project_type,
+        AgencyAction.agency,
         AgencyAction.outcome,
         AgencyAction.filed_date,
         AgencyAction.decision_date,
     ).join(AgencyAction, AgencyAction.project_id == Project.id)
     stmt = _apply_filed_range(stmt, start_date, end_date)
+    if agency:
+        stmt = stmt.where(AgencyAction.agency == agency)
+    if major_only:
+        stmt = stmt.where(
+            or_(
+                AgencyAction.agency != "BLM",
+                Project.project_type.not_in(MAJOR_FILTER_TYPES),
+                AgencyAction.is_major.is_(True),
+            )
+        )
 
-    by_type: dict[str, list] = {}
-    for project_type, outcome, filed, decided in db.execute(stmt):
-        by_type.setdefault(project_type, []).append((outcome, filed, decided))
+    by_type: dict[tuple[str, str], list] = {}
+    for project_type, action_agency, outcome, filed, decided in db.execute(stmt):
+        by_type.setdefault((project_type, action_agency), []).append((outcome, filed, decided))
 
     trends = []
-    for project_type in sorted(by_type):
-        rows = by_type[project_type]
+    for project_type, action_agency in sorted(by_type):
+        rows = by_type[(project_type, action_agency)]
         by_year: dict[int, list] = {}
         for row in rows:
             if row[1] is not None:
@@ -74,6 +93,7 @@ def get_trends(
         trends.append(
             {
                 "project_type": project_type,
+                "agency": action_agency,
                 **_summarize(rows),
                 "by_year": [{"year": year, **_summarize(by_year[year])} for year in sorted(by_year)],
             }
@@ -88,6 +108,7 @@ def list_projects(
     region: str | None = None,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
+    agency: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> tuple[int, list[Project]]:
@@ -100,9 +121,11 @@ def list_projects(
         # region is a comma-separated list of state codes ("NY,PA").
         padded = func.lower(literal(",") + Project.region + literal(","))
         stmt = stmt.where(padded.contains(f",{region.strip().lower()},", autoescape=True))
-    if start_date is not None or end_date is not None:
-        in_range = _apply_filed_range(select(AgencyAction.project_id), start_date, end_date)
-        stmt = stmt.where(Project.id.in_(in_range))
+    if start_date is not None or end_date is not None or agency:
+        matching = _apply_filed_range(select(AgencyAction.project_id), start_date, end_date)
+        if agency:
+            matching = matching.where(AgencyAction.agency == agency)
+        stmt = stmt.where(Project.id.in_(matching))
 
     total = db.scalar(select(func.count()).select_from(stmt.subquery()))
     projects = db.scalars(
@@ -124,4 +147,5 @@ def list_filter_options(db: Session) -> dict[str, list[str]]:
     types = db.scalars(select(Project.project_type).distinct().order_by(Project.project_type)).all()
     region_lists = db.scalars(select(Project.region).where(Project.region.is_not(None)).distinct()).all()
     regions = sorted({code for value in region_lists for code in value.split(",") if code})
-    return {"project_types": list(types), "regions": regions}
+    agencies = db.scalars(select(AgencyAction.agency).distinct().order_by(AgencyAction.agency)).all()
+    return {"project_types": list(types), "regions": regions, "agencies": list(agencies)}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import enum
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -12,13 +13,30 @@ from app.schemas import ProjectDetail, ProjectList, ProjectTypeTrend
 router = APIRouter()
 
 
+class Agency(str, enum.Enum):
+    FERC = "FERC"
+    BLM = "BLM"
+
+
 @router.get("/trends", response_model=list[ProjectTypeTrend])
 def trends(
     start_date: datetime.date | None = Query(None, description="Only actions filed on/after this date"),
     end_date: datetime.date | None = Query(None, description="Only actions filed on/before this date"),
+    agency: Agency | None = Query(None, description="Only this agency's actions (default: all)"),
+    major_only: bool = Query(
+        False,
+        description="For BLM pipelines and electric transmission, count only actions that went "
+        "through an EA or EIS (is_major). Other project types are unaffected.",
+    ),
     db: Session = Depends(get_db),
 ):
-    return queries.get_trends(db, start_date=start_date, end_date=end_date)
+    return queries.get_trends(
+        db,
+        start_date=start_date,
+        end_date=end_date,
+        agency=agency.value if agency else None,
+        major_only=major_only,
+    )
 
 
 @router.get("/projects", response_model=ProjectList)
@@ -28,6 +46,7 @@ def projects(
     region: str | None = None,
     start_date: datetime.date | None = Query(None, description="Has an action filed on/after this date"),
     end_date: datetime.date | None = Query(None, description="Has an action filed on/before this date"),
+    agency: Agency | None = Query(None, description="Has an action by this agency (default: all)"),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -39,6 +58,7 @@ def projects(
         region=region,
         start_date=start_date,
         end_date=end_date,
+        agency=agency.value if agency else None,
         limit=limit,
         offset=offset,
     )

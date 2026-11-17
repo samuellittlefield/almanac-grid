@@ -17,6 +17,8 @@ class AgencyActionOut(BaseModel):
     outcome: str
     statutory_deadline: datetime.date | None
     source_url: str | None
+    review_tier: str | None
+    is_major: bool
 
 
 class ProjectSummary(BaseModel):
@@ -61,4 +63,5 @@ class YearTrend(OutcomeSummary):
 
 class ProjectTypeTrend(OutcomeSummary):
     project_type: str
+    agency: str
     by_year: list[YearTrend]

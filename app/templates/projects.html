@@ -5,6 +5,15 @@
 <p class="muted">{{ result.total }} project{{ "" if result.total == 1 else "s" }} match.</p>
 
 <form class="filters" method="get" action="/ui/projects">
+  {% set agency_value = filters.agency.value if filters.agency else none %}
+  <label>Agency
+    <select name="agency">
+      <option value="">All</option>
+      {% for value in ["FERC", "BLM"] %}
+      <option value="{{ value }}" {{ "selected" if value == agency_value }}>{{ value }}</option>
+      {% endfor %}
+    </select>
+  </label>
   <label>Project type
     <select name="project_type">
       <option value="">All</option>
@@ -32,7 +41,7 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Project</th><th>Type</th><th>Applicant</th><th>Region</th><th>Docket</th><th>Filed</th><th>Outcome</th></tr>
+      <tr><th>Project</th><th>Type</th><th>Agency</th><th>Applicant</th><th>Region</th><th>Docket / serial</th><th>Filed</th><th>Outcome</th></tr>
     </thead>
     <tbody>
       {% for project in result["items"] %}
@@ -40,6 +49,7 @@
       <tr>
         <td class="wrap"><a href="/ui/projects/{{ project.id }}">{{ project.name }}</a></td>
         <td>{{ project.project_type | label }}</td>
+        <td>{{ action.agency if action else "—" }}</td>
         <td class="wrap">{{ project.applicant }}</td>
         <td>{{ project.region | replace(",", ", ") if project.region else "—" }}</td>
         <td>{{ action.docket_number if action else "—" }}</td>
