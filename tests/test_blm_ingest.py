@@ -197,6 +197,20 @@ def test_decode_actions_respects_action_status():
     assert decode_actions(actions) == Decision(date(2023, 1, 5))
     assert decode_actions([_action("125", "2024-05-05", "Rejected/Denied")]).outcome == "denied"
     assert decode_actions([_action("130", "2024-05-05", "Filed")]).outcome == "withdrawn"
+    assert decode_actions([_action("130", "2024-05-05", "Requested")]).outcome == "withdrawn"
+
+
+def test_rejection_in_progress_explains_a_closure():
+    filed = _action("124", "2020-01-01")
+    rejected = _action("125", "2021-03-01", "Under Review")
+    closed = _action("970", "2021-04-01", "Approved/Accepted")
+    # Still under review and the case is open: not decided yet.
+    assert decode_actions([filed, rejected]).outcome is None
+    # Then closed: it was a rejection, on the rejection's date.
+    assert decode_actions([filed, rejected, closed]) == Decision(date(2020, 1, 1), "denied", date(2021, 3, 1))
+    # A draft rejection doesn't explain anything.
+    draft = _action("125", "2021-03-01", "Draft")
+    assert decode_actions([filed, draft, closed]).outcome == "outcome_unclear"
 
 
 def test_decode_actions_uses_whichever_date_the_action_carries():

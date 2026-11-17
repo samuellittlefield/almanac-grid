@@ -122,8 +122,13 @@ _SAME_DAY_RANK = {
 FINAL_STATUSES = frozenset({"", "migrated case action", "approved/accepted", "completed"})
 STATUSES_BY_CODE = {
     "125": FINAL_STATUSES | {"rejected/denied"},
-    "130": FINAL_STATUSES | {"withdrawn", "filed", "received"},
+    "130": FINAL_STATUSES | {"withdrawn", "filed", "received", "requested"},
 }
+# A rejection or withdrawal still in progress (Filed, Under Review, ...) that
+# is followed by the case being closed did take effect: it says why the case
+# was closed.
+TENTATIVE_CODES = ("125", "130")
+VOID_STATUSES = frozenset({"draft", "cancelled", "canceled"})
 # A filing is a fact whatever later happened to the action record.
 ANY_STATUS_CODES = FILED_CODES + ESTABLISHED_CODES
 
@@ -306,10 +311,14 @@ def action_date(action: dict) -> date | None:
     return None
 
 
+def _status(action: dict) -> str:
+    return (action.get("Status__c") or "").strip().lower()
+
+
 def _counts(code: str, action: dict) -> bool:
-    status = (action.get("Status__c") or "").strip().lower()
+    status = _status(action)
     if code in ANY_STATUS_CODES:
-        return status != "draft"
+        return status not in VOID_STATUSES
     return status in STATUSES_BY_CODE.get(code, FINAL_STATUSES)
 
 
@@ -319,31 +328,39 @@ def decode_actions(actions: Iterable[dict]) -> Decision:
     Filing date: the earliest Application Received (124), else Case
     Established (387). Outcome: the first right-of-way-issued (307 / 8307) /
     lease-issued / rejected / withdrawn action that took effect, read in date
-    order; a case closed without
-    one is `outcome_unclear` (closed, direction unknown). A reinstatement (388)
-    reopens the case, so dispositions after it win. Post-authorization actions
-    (modifications, renewals, relinquishments, ...) are ignored."""
+    order. A case closed (967 / 970) without one is `outcome_unclear`
+    (closed, direction unknown), unless a rejection or withdrawal was in
+    progress when it closed. A reinstatement (388) reopens the case, so
+    dispositions after it win. Post-authorization actions (modifications,
+    renewals, relinquishments, ...) are ignored."""
     dated = []
     for action in actions:
         code = (action.get("Code__c") or "").strip()
         when = action_date(action)
-        if code and when and _counts(code, action):
-            dated.append((when, _SAME_DAY_RANK.get(code, 9), code))
+        if not code or not when:
+            continue
+        if _counts(code, action):
+            dated.append((when, _SAME_DAY_RANK.get(code, 9), code, True))
+        elif code in TENTATIVE_CODES and _status(action) not in VOID_STATUSES:
+            dated.append((when, _SAME_DAY_RANK[code], code, False))
     dated.sort()
 
     result = Decision()
-    filings = [when for when, _, code in dated if code in FILED_CODES]
-    established = [when for when, _, code in dated if code in ESTABLISHED_CODES]
+    filings = [when for when, _, code, _ in dated if code in FILED_CODES]
+    established = [when for when, _, code, _ in dated if code in ESTABLISHED_CODES]
     result.filed_date = (filings or established or [None])[0]
 
-    for when, _, code in dated:
+    tentative: tuple[str, date] | None = None
+    for when, _, code, effective in dated:
         if code in REOPEN_CODES:
-            result.outcome, result.decision_date = None, None
+            result.outcome, result.decision_date, tentative = None, None, None
+        elif code in DECISION_CODES and not effective:
+            tentative = tentative or (DECISION_CODES[code], when)
         elif code in DECISION_CODES:
             if result.outcome in (None, "outcome_unclear"):
                 result.outcome, result.decision_date = DECISION_CODES[code], when
         elif code in CLOSURE_CODES and result.outcome is None:
-            result.outcome, result.decision_date = "outcome_unclear", when
+            result.outcome, result.decision_date = tentative or ("outcome_unclear", when)
     return result
 
 
