@@ -216,3 +216,39 @@ Interactions with existing code to get right:
 - BLM's reporting dashboards at reports.blm.gov (bulk case-action reports):
   they require accepting a DOI system-use notice, which is the project owner's
   call, not the build agent's.
+
+## Notes from implementation (Nov 2026)
+
+Where the data disagreed with this spec, the build followed the data:
+
+- **MLRS `getItems` hides the action code from guests.** The case page's
+  Case Actions list leaves the Action column blank for anonymous users. The
+  build calls `RelatedListUiController.getRelatedListRecords` for
+  `Case_Actions__r` with explicit fields instead; `Code__c` and
+  `Action_Name__c` (formula fields on the case action) come back.
+- **The disposition-code table is incomplete for current MLRS.** Grants made
+  in MLRS are recorded as **8307** *Land Use Authorization Issued*, not 307.
+  Power-line easements are **345** *Easement Issued*, and renewals filed on
+  their own serial are decided by **308** *ROW Renewed* with no 307. All three
+  count as approvals; the first decision still wins, so a renewal never
+  overrides an original grant. **314** *Renewal Application Filed* is the
+  last filing-date fallback.
+- **New MLRS actions have a status** (Filed, Under Review, Approved/Accepted,
+  Rejected/Denied, ...). Grants and closures count only once in effect; a
+  rejection or withdrawal still in progress counts if the case is then closed.
+- **"Interim" isn't pending**: most Interim-layer cases have a grant,
+  rejection or withdrawal in MLRS. It means `pending` only in the no-MLRS
+  fallback.
+- **The Closed layer's date is the closure, not the decision.** Old grants that
+  expired or were relinquished recently are in the Closed layer with a recent
+  date; the window is applied to the decoded MLRS decision date instead.
+- **The geothermal layers have no disposition date or customer.** Geothermal
+  cases are windowed after decoding MLRS, and the applicant comes from the
+  case's MLRS customers. Only post-2005-rules lease products are loaded;
+  older leases can't have been issued in the window.
+- **ePlanning's Fluid Minerals program is ~11,500 drilling projects.**
+  Geothermal NEPA is under Renewable Energy, so Fluid Minerals projects are
+  fetched only when the name mentions geothermal, pipelines or rights-of-way.
+- **Solar and wind miss the 90% known-outcome bar** (80% and 62%): the rest are
+  closures with no recorded reason. The README's Coverage section has the
+  numbers.
