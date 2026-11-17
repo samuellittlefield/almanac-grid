@@ -393,6 +393,7 @@ def test_parse_saved_search_results_with_stray_backslash():
         ("CA-956A, CA-958, and CA-1862", {"CA956", "CA958", "CA1862"}),
         ("COC 038521A", {"COC38521"}),
         ("AZA_017786", {"AZA17786"}),
+        ("N-90788", {"N90788", "NVN90788"}),
         ("CACA105882914", {"CACA105882914"}),  # MLRS serial: never split
         ("", set()),
         (None, set()),

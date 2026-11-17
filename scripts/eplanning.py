@@ -83,7 +83,12 @@ def serial_keys(text: str | None) -> set[str]:
     for letters, digits in _SERIAL_RE.findall((text or "").upper()):
         if len(digits) >= 8 and digits.startswith("0"):
             digits = digits[:-2]
-        keys.add(letters + (digits.lstrip("0") or "0"))
+        number = digits.lstrip("0") or "0"
+        keys.add(letters + number)
+        if letters == "N":
+            # Nevada's pre-LR2000 prefix: ePlanning's "N-90788" is LR2000's
+            # "NVN 090788".
+            keys.add("NVN" + number)
     return keys
 
 
