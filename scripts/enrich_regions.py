@@ -9,9 +9,10 @@ states for each project and are matched on docket / project number:
   (replacements, compressor changes) isn't in it.
 - FERC's hydro lists: pending license / relicense / exemption applications
   (PLRE), and licenses and exemptions that took under two years to issue,
-  cumulative since 2007 (LE_Less2Years). Long relicensings are only in FERC's
-  Active Licenses dataset on data.ferc.gov, which needs an API key and isn't
-  used here.
+  cumulative since 2007 (LE_Less2Years).
+- FERC's Active Licenses and Active Exemptions datasets on data.ferc.gov,
+  which cover long relicensings the lists above miss. These need an API key
+  (`FERC_API_KEY` in `.env`) and are skipped without one.
 
 EL complaints have no project location, so they are left alone.
 
@@ -36,12 +37,15 @@ import requests
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.models import AgencyAction, Project
 from scripts.ingest_ferc import _STATE_ABBREVIATIONS, _build_http_session, base_docket_number
 
 EIA_DATA_PAGE = "https://www.eia.gov/naturalgas/data.php"
 FERC_FILES_URL = "https://www.ferc.gov/sites/default/files/{folder}/{name}"
 FERC_HYDRO_FILES = ("PLRE", "LE_Less2Years")
+FERC_API_DATA_URL = "https://api.data.ferc.gov/v1/dataset/{id}/data"
+FERC_HYDRO_DATASETS = (("active licenses", 31), ("active exemptions", 30))
 # FERC republishes these roughly monthly under a dated filename.
 FERC_LOOKBACK_DAYS = 120
 
@@ -105,6 +109,30 @@ def parse_ferc_hydro_states(source: BinaryIO) -> dict[str, list[str]]:
     return found
 
 
+def parse_ferc_dataset_states(body: dict) -> dict[str, list[str]]:
+    """{"P-2639": ["WI"], ...} from a data.ferc.gov dataset response."""
+    if body.get("has_more"):
+        raise LookupError("response is paginated; only the first page would be read")
+    found: dict[str, list[str]] = {}
+    for row in body["row_data"]:
+        number = re.search(r"\d+", str(row.get("Project_Number") or ""))
+        if number:
+            _merge(found, f"P-{int(number.group())}", _states(row.get("State(s)")))
+    return found
+
+
+def fetch_ferc_dataset(session: requests.Session, dataset_id: int, api_key: str) -> dict:
+    """The key goes in the query string, so it's masked out of any error."""
+    try:
+        response = session.get(
+            FERC_API_DATA_URL.format(id=dataset_id), params={"api_key": api_key}, timeout=120
+        )
+        response.raise_for_status()
+        return response.json()
+    except (requests.RequestException, ValueError) as error:
+        raise LookupError(str(error).replace(api_key, "<FERC_API_KEY>")) from None
+
+
 def find_eia_tracker_url(session: requests.Session) -> str:
     response = session.get(EIA_DATA_PAGE, timeout=60)
     response.raise_for_status()
@@ -156,32 +184,51 @@ def apply_regions(db: Session, states_by_docket: dict[str, list[str]]) -> int:
     return updated
 
 
-def collect_states(session: requests.Session, today: date) -> dict[str, list[str]]:
+def collect_states(session: requests.Session, today: date, api_key: str | None) -> dict[str, list[str]]:
     """Every source that can be reached; a missing one is reported and skipped."""
-    found: dict[str, list[str]] = {}
-    sources = [("EIA pipeline projects", lambda: find_eia_tracker_url(session), parse_eia_pipeline_states)]
-    for prefix in FERC_HYDRO_FILES:
-        sources.append(
-            (f"FERC {prefix}", lambda prefix=prefix: find_ferc_hydro_file_url(session, prefix, today),
-             parse_ferc_hydro_states)
-        )
-    for label, locate, parse in sources:
-        try:
+
+    def spreadsheet(locate, parse):
+        def load():
             url = locate()
-            parsed = parse(_download(session, url))
+            return parse(_download(session, url)), url
+        return load
+
+    sources = [
+        ("EIA pipeline projects", spreadsheet(lambda: find_eia_tracker_url(session), parse_eia_pipeline_states))
+    ]
+    for prefix in FERC_HYDRO_FILES:
+        locate = lambda prefix=prefix: find_ferc_hydro_file_url(session, prefix, today)
+        sources.append((f"FERC {prefix}", spreadsheet(locate, parse_ferc_hydro_states)))
+    for name, dataset_id in FERC_HYDRO_DATASETS:
+        def load(dataset_id=dataset_id):
+            if not api_key:
+                raise LookupError("no FERC_API_KEY in .env")
+            body = fetch_ferc_dataset(session, dataset_id, api_key)
+            return parse_ferc_dataset_states(body), f"data.ferc.gov dataset {dataset_id}"
+        sources.append((f"FERC {name}", load))
+
+    found: dict[str, list[str]] = {}
+    for label, load in sources:
+        try:
+            parsed, origin = load()
         except (requests.RequestException, LookupError) as error:
             print(f"  {label}: skipped ({error})", flush=True)
             continue
-        print(f"  {label}: {len(parsed)} dockets from {url}", flush=True)
+        print(f"  {label}: {len(parsed)} dockets from {origin}", flush=True)
         for docket, states in parsed.items():
             _merge(found, docket, states)
     return found
 
 
-def enrich_regions(db: Session, session: requests.Session | None = None, today: date | None = None) -> int:
+def enrich_regions(
+    db: Session,
+    session: requests.Session | None = None,
+    today: date | None = None,
+    api_key: str | None = settings.ferc_api_key,
+) -> int:
     session = session or _build_http_session()
     print("Filling project regions...", flush=True)
-    updated = apply_regions(db, collect_states(session, today or date.today()))
+    updated = apply_regions(db, collect_states(session, today or date.today(), api_key))
     db.commit()
     return updated
 

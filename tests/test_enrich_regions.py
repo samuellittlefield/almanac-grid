@@ -7,10 +7,14 @@ import openpyxl
 import pytest
 
 from app.models import AgencyAction, Project
+import requests
+
 from scripts.enrich_regions import (
     apply_regions,
+    fetch_ferc_dataset,
     find_ferc_hydro_file_url,
     parse_eia_pipeline_states,
+    parse_ferc_dataset_states,
     parse_ferc_hydro_states,
 )
 
@@ -72,6 +76,37 @@ def test_parse_ferc_hydro_states():
 
     assert parse_ferc_hydro_states(pending) == {"P-2639": ["WI"], "P-1234": ["OR", "WA"]}
     assert parse_ferc_hydro_states(issued) == {"P-400": ["CO"]}
+
+
+def test_parse_ferc_dataset_states():
+    body = {
+        "row_data": [
+            {"Project_Number": "P-5", "Project_Name": "Séliš Ksanka Qíispé", "State(s)": "MT"},
+            {"Project_Number": "P-1893", "Project_Name": "Merrimack River", "State(s)": "MA, NH, VT"},
+            {"Project_Number": "P-77", "State(s)": None},
+        ],
+        "row_count": 3,
+        "has_more": False,
+    }
+
+    assert parse_ferc_dataset_states(body) == {"P-5": ["MT"], "P-1893": ["MA", "NH", "VT"]}
+
+
+def test_parse_ferc_dataset_states_refuses_a_partial_page():
+    with pytest.raises(LookupError):
+        parse_ferc_dataset_states({"row_data": [], "has_more": True})
+
+
+def test_fetch_ferc_dataset_masks_the_key_in_errors():
+    class Session:
+        def get(self, url, params, **kwargs):
+            raise requests.HTTPError(f"403 Client Error: Forbidden for url: {url}?api_key={params['api_key']}")
+
+    with pytest.raises(LookupError) as raised:
+        fetch_ferc_dataset(Session(), 31, "secret-key-123")
+
+    assert "secret-key-123" not in str(raised.value)
+    assert "<FERC_API_KEY>" in str(raised.value)
 
 
 def _project(db, project_type, region, dockets):
