@@ -23,6 +23,7 @@
         <th class="num">Approved</th>
         <th class="num">Denied</th>
         <th class="num">Withdrawn</th>
+        <th class="num" title="Decided, but the order title doesn't say which way">Outcome unclear</th>
         <th class="num">Pending</th>
         <th class="num">Approval rate</th>
         <th class="num">Denial rate</th>
@@ -38,6 +39,7 @@
         <td class="num">{{ row.approved }}</td>
         <td class="num">{{ row.denied }}</td>
         <td class="num">{{ row.withdrawn }}</td>
+        <td class="num">{{ row.outcome_unclear }}</td>
         <td class="num">{{ row.pending }}</td>
         <td class="num">{{ row.approval_rate | pct }}</td>
         <td class="num">{{ row.denial_rate | pct }}</td>
@@ -66,6 +68,7 @@
         <th class="num">Approved</th>
         <th class="num">Denied</th>
         <th class="num">Withdrawn</th>
+        <th class="num" title="Decided, but the order title doesn't say which way">Outcome unclear</th>
         <th class="num">Pending</th>
         <th class="num">Approval rate</th>
         <th class="num">Avg days to decision</th>
@@ -79,6 +82,7 @@
         <td class="num">{{ year.approved }}</td>
         <td class="num">{{ year.denied }}</td>
         <td class="num">{{ year.withdrawn }}</td>
+        <td class="num">{{ year.outcome_unclear }}</td>
         <td class="num">{{ year.pending }}</td>
         <td class="num">{{ year.approval_rate | pct }}</td>
         <td class="num">{{ year.avg_days_to_decision if year.avg_days_to_decision is not none else "—" }}</td>

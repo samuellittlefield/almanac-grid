@@ -184,7 +184,13 @@ def test_records_outside_the_window_are_dropped(sample):
         ("Letter to WEC Energy Group denying the request for an exemption from 18 CFR Part 12 under P-1.", "hydroelectric", None),
         ("Order Denying Complaint re A v. B under EL20-1.", "electric_complaint", "denied"),
         ("Order Granting in Part and Denying in Part Complaint re A v. B under EL20-2.", "electric_complaint", "approved"),
-        ("Order on Complaint re A v. B under EL21-61.", "electric_complaint", None),
+        ("Order on Complaint re A v. B under EL21-61.", "electric_complaint", "outcome_unclear"),
+        ("Order On Petition For Declaratory Order re X under EL22-5.", "electric_complaint", "outcome_unclear"),
+        ("Order on Complaint and Establishing Hearing and Settlement Judge Procedures re A v. B under EL22-9.", "electric_complaint", None),
+        ("Order on Complaint and Section 206 Filing, and Establishing Paper Hearing Procedures re A under EL22-7.", "electric_complaint", None),
+        ("Order on Rehearing re Complaint of A under EL21-61.", "electric_complaint", None),
+        ("Order on Formula Rate Protocols and Establishing a Show Cause Proceeding re X under EL22-3.", "electric_complaint", None),
+        ("Order on Remand re X under CP17-40.", "natural_gas_pipeline", None),
     ],
 )
 def test_classify_decision(description, project_type, expected):
@@ -245,6 +251,27 @@ def test_upsert_is_idempotent_and_groups_sub_dockets_under_one_project(db_sessio
         ("CP17-101-007", "certificate_amendment", "approved"),
     ]
     assert {a.agency for a in transco.actions} == {"FERC"}
+
+
+@pytest.mark.parametrize("orders", [("unclear", "denied"), ("denied", "unclear")])
+def test_known_outcome_beats_an_earlier_unclear_order(orders):
+    record = ActionRecord(
+        docket_number="EL21-61-000",
+        project_type="electric_complaint",
+        action_type="complaint",
+        filed_date=datetime.date(2021, 1, 4),
+    )
+    records = {"EL21-61-000": record}
+    hits = {
+        "unclear": {"description": "Order on Complaint re A v. B under EL21-61.", "filedDate": "06/01/2021",
+                    "docketNumbers": ["EL21-61-000"]},
+        "denied": {"description": "Order Denying Complaint re A v. B under EL21-61.", "filedDate": "09/01/2021",
+                   "docketNumbers": ["EL21-61-000"]},
+    }
+    for name in orders:
+        merge_decision_hit(records, hits[name], EL_CONFIG)
+
+    assert (record.outcome, record.decision_date) == ("denied", datetime.date(2021, 9, 1))
 
 
 def test_upsert_updates_a_pending_action_once_it_is_decided(db_session):

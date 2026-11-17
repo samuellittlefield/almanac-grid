@@ -97,6 +97,26 @@ def test_trends_date_range_filter(client, seeded):
     assert (trends[0]["total_actions"], trends[0]["approved"], trends[0]["denied"]) == (2, 0, 1)
 
 
+def test_trends_outcome_unclear_counts_toward_timing_not_rates(client, db_session):
+    d = datetime.date
+    _add(
+        db_session, "A v. B", "electric_complaint", "A", None,
+        [
+            ("EL21-1-000", "complaint", d(2021, 1, 1), d(2021, 3, 2), "denied"),
+            ("EL21-2-000", "complaint", d(2021, 1, 1), d(2021, 5, 1), "outcome_unclear"),
+            ("EL21-3-000", "complaint", d(2021, 1, 1), None, "pending"),
+        ],
+    )
+    db_session.commit()
+
+    el = client.get("/trends").json()[0]
+
+    assert (el["total_actions"], el["decided"], el["outcome_unclear"], el["pending"]) == (3, 1, 1, 1)
+    assert el["denial_rate"] == 1.0
+    # 60 and 120 days.
+    assert el["avg_days_to_decision"] == 90.0
+
+
 def test_trends_rejects_bad_date(client):
     assert client.get("/trends", params={"start_date": "not-a-date"}).status_code == 422
 

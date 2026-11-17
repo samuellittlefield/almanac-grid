@@ -39,7 +39,7 @@ The repo already has a scaffold:
 | action_type | string | e.g. `certificate_application`, `license_order`, `backstop_siting_petition` |
 | filed_date | date | |
 | decision_date | date, nullable | |
-| outcome | string | `approved` / `denied` / `withdrawn` / `pending` |
+| outcome | string | `approved` / `denied` / `withdrawn` / `outcome_unclear` (decided on `decision_date`, but the order doesn't say which way) / `pending` |
 | statutory_deadline | date, nullable | for delay calculations once relevant deadlines are tracked |
 | source_url | string | link back to the FERC eLibrary record |
 

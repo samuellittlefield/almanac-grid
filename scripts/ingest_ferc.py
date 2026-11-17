@@ -140,6 +140,12 @@ DOCKET_PREFIX_CONFIGS: list[DocketPrefixConfig] = [CP_CONFIG, P_CONFIG, EL_CONFI
 _LNG_RE = re.compile(r"\bLNG\b|liquef|export terminal|import terminal", re.I)
 _EL_NOT_APPLICATION_RE = re.compile(r"errata|supplement|tariff filing|fee collection|answer", re.I)
 _EL_PROCEDURAL_RE = re.compile(r"rehearing|clarification|\bstay\b|compliance", re.I)
+# "Order on Complaint" disposes of the complaint without saying which way. One
+# that also sets hearing or show-cause procedures hasn't decided it yet.
+_EL_UNCLEAR_DECISION_RE = re.compile(
+    r"^\s*Order on (?:the\s+)?(?:complaints?|petition for declaratory order)\b", re.I
+)
+_EL_NOT_YET_DECIDED_RE = re.compile(r"hearing|settlement|show cause|briefing", re.I)
 _DRAFT_RE = re.compile(r"\bdraft\b|pre-?application|notice of intent", re.I)
 _REQUEST_RE = re.compile(r"\bappl\w*|\bpetition|\bamend|\bcomplaint|\brequest", re.I)
 # Filed under the certificate document type but not decided by order: blanket
@@ -287,7 +293,8 @@ def classify_project_type(config: DocketPrefixConfig, description: str) -> str:
 
 
 def classify_decision(description: str, project_type: str) -> str | None:
-    """'approved' / 'denied' if this order decides an application, else None.
+    """'approved' / 'denied' / 'outcome_unclear' if this order decides an
+    application, else None.
 
     Most orders on a docket are procedural (rehearing, stays, extensions of
     time, compliance). Those return None so that e.g. "Order Denying Rehearing"
@@ -302,6 +309,12 @@ def classify_decision(description: str, project_type: str) -> str | None:
         return "approved"
     if _DENIAL_RES[family].search(description):
         return "denied"
+    if (
+        family == "electric_complaint"
+        and _EL_UNCLEAR_DECISION_RE.search(description)
+        and not _EL_NOT_YET_DECIDED_RE.search(description)
+    ):
+        return "outcome_unclear"
     return None
 
 
@@ -421,8 +434,15 @@ def merge_decision_hit(records: dict[str, ActionRecord], hit: dict, config: Dock
         if record.filed_date and decided < record.filed_date:
             continue
         # The first order that decides the application is the decision; later
-        # ones (reissuance after remand, vacatur) don't move the date.
-        if record.outcome == "pending" or decided < record.decision_date:
+        # ones (reissuance after remand, vacatur) don't move the date. An order
+        # that says which way it went beats one that doesn't.
+        was_unclear = record.outcome == "outcome_unclear"
+        is_unclear = outcome == "outcome_unclear"
+        if was_unclear != is_unclear and record.outcome != "pending":
+            replace = was_unclear
+        else:
+            replace = record.outcome == "pending" or decided < record.decision_date
+        if replace:
             record.outcome = outcome
             record.decision_date = decided
             record.source_url = _source_url(hit) or record.source_url

@@ -24,7 +24,7 @@
         <td>{{ action.filed_date or "—" }}</td>
         <td>{{ action.decision_date or "—" }}</td>
         <td class="num">{% if action.filed_date and action.decision_date %}{{ (action.decision_date - action.filed_date).days }}{% else %}—{% endif %}</td>
-        <td><span class="outcome {{ action.outcome }}">{{ action.outcome }}</span></td>
+        <td><span class="outcome {{ action.outcome }}">{{ action.outcome | replace("_", " ") }}</span></td>
         <td>{% if action.source_url %}<a href="{{ action.source_url }}" rel="noopener" target="_blank">FERC eLibrary</a>{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}

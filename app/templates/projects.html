@@ -44,7 +44,7 @@
         <td>{{ project.region or "—" }}</td>
         <td>{{ action.docket_number if action else "—" }}</td>
         <td>{{ action.filed_date if action and action.filed_date else "—" }}</td>
-        <td>{% if action %}<span class="outcome {{ action.outcome }}">{{ action.outcome }}</span>{% else %}—{% endif %}</td>
+        <td>{% if action %}<span class="outcome {{ action.outcome }}">{{ action.outcome | replace("_", " ") }}</span>{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>

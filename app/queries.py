@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session, selectinload
 from app.models import AgencyAction, Project
 
 DECIDED_OUTCOMES = ("approved", "denied", "withdrawn")
+# Decided on a known date but in an unknown direction: counts toward time to
+# decision, not toward the approval/denial/withdrawal rates.
+TIMED_OUTCOMES = DECIDED_OUTCOMES + ("outcome_unclear",)
 
 
 def _apply_filed_range(stmt, start_date: datetime.date | None, end_date: datetime.date | None):
@@ -24,15 +27,15 @@ def _rate(count: int, decided: int) -> float | None:
 
 def _summarize(rows) -> dict:
     """rows: iterable of (outcome, filed_date, decision_date)."""
-    counts = {"approved": 0, "denied": 0, "withdrawn": 0, "pending": 0}
+    counts = {"approved": 0, "denied": 0, "withdrawn": 0, "outcome_unclear": 0, "pending": 0}
     durations: list[int] = []
     for outcome, filed, decided in rows:
         counts[outcome if outcome in counts else "pending"] += 1
-        if outcome in DECIDED_OUTCOMES and filed and decided and decided >= filed:
+        if outcome in TIMED_OUTCOMES and filed and decided and decided >= filed:
             durations.append((decided - filed).days)
     decided_total = sum(counts[o] for o in DECIDED_OUTCOMES)
     return {
-        "total_actions": decided_total + counts["pending"],
+        "total_actions": decided_total + counts["outcome_unclear"] + counts["pending"],
         "decided": decided_total,
         **counts,
         "approval_rate": _rate(counts["approved"], decided_total),

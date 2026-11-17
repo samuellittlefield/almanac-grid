@@ -47,6 +47,7 @@ class OutcomeSummary(BaseModel):
     approved: int
     denied: int
     withdrawn: int
+    outcome_unclear: int
     pending: int
     approval_rate: float | None
     denial_rate: float | None

@@ -61,10 +61,13 @@ Certificate", "Order Denying ...") and from withdrawal notices. Things to know
 about the result:
 
 - **Outcomes are heuristic.** Procedural orders (rehearing, stays, extensions,
-  compliance) are ignored. An order whose title doesn't say which way it went
-  ("Order on Complaint") leaves the action `pending`, so `pending` means "no
-  recognizable decision yet", not strictly "undecided". This mostly affects EL
-  dockets.
+  compliance) are ignored. An EL order that disposes of the complaint or
+  petition without saying which way it went ("Order on Complaint") makes the
+  action `outcome_unclear`: it has a decision date and counts toward average
+  days to decision, but not toward approval / denial / withdrawal rates, whose
+  denominator (`decided`) is known-direction decisions only. An "Order on
+  Complaint" that also sets hearing or show-cause procedures hasn't decided the
+  case and leaves it `pending`.
 - **Not everything on a CP docket is an application.** Blanket-certificate
   prior-notice filings (which take effect without an order) and
   abandonment-only requests are skipped.
