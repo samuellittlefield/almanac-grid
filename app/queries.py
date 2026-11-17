@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import func, literal, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import AgencyAction, Project
@@ -97,7 +97,9 @@ def list_projects(
     if applicant:
         stmt = stmt.where(Project.applicant.ilike(f"%{applicant}%"))
     if region:
-        stmt = stmt.where(func.lower(Project.region) == region.lower())
+        # region is a comma-separated list of state codes ("NY,PA").
+        padded = func.lower(literal(",") + Project.region + literal(","))
+        stmt = stmt.where(padded.contains(f",{region.strip().lower()},", autoescape=True))
     if start_date is not None or end_date is not None:
         in_range = _apply_filed_range(select(AgencyAction.project_id), start_date, end_date)
         stmt = stmt.where(Project.id.in_(in_range))
@@ -120,7 +122,6 @@ def get_project(db: Session, project_id: int) -> Project | None:
 
 def list_filter_options(db: Session) -> dict[str, list[str]]:
     types = db.scalars(select(Project.project_type).distinct().order_by(Project.project_type)).all()
-    regions = db.scalars(
-        select(Project.region).where(Project.region.is_not(None)).distinct().order_by(Project.region)
-    ).all()
-    return {"project_types": list(types), "regions": list(regions)}
+    region_lists = db.scalars(select(Project.region).where(Project.region.is_not(None)).distinct()).all()
+    regions = sorted({code for value in region_lists for code in value.split(",") if code})
+    return {"project_types": list(types), "regions": regions}

@@ -229,12 +229,17 @@ _STATE_ABBREVIATIONS = {
 # Only where the state is given as a place ("in Greene County, Pennsylvania").
 # A bare state name is usually part of a company name ("Texas Eastern
 # Transmission"), which says nothing about where the project is.
-_STATE_RE = re.compile(
-    r"(?:\b(?:County|Counties|Parish|Parishes|Borough|Township),|\b(?:in|near|offshore))\s+("
+_STATE_NAME = (
+    "("
     + "|".join(re.escape(name) for name in sorted(_STATE_ABBREVIATIONS, key=len, reverse=True))
-    + r")\b(?!\s+(?:Gas|Power|Electric|Public|Energy|Pipeline|Transmission|Department|State))",
+    + r")\b(?!\s+(?:Gas|Power|Electric|Public|Energy|Pipeline|Transmission|Department|State))"
+)
+_STATE_RE = re.compile(
+    r"(?:\b(?:County|Counties|Parish|Parishes|Borough|Township),|\b(?:in|near|offshore))\s+" + _STATE_NAME,
     re.I,
 )
+# The rest of a list: "in Pennsylvania, Delaware and Maryland".
+_NEXT_STATE_RE = re.compile(r"\s*(?:,\s*(?:and\s+)?|\s+and\s+)" + _STATE_NAME, re.I)
 
 _NAME = r"[A-Z][\w&.,/()\-’' ]*?"
 _RE_RE_POSSESSIVE = re.compile(rf"\bre\s+(?:the\s+)?(?P<applicant>{_NAME})[’']s?\s+[A-Z0-9]")
@@ -282,8 +287,17 @@ def extract_project_name(description: str) -> str | None:
 
 
 def extract_region(description: str) -> str | None:
-    match = _STATE_RE.search(description or "")
-    return _STATE_ABBREVIATIONS[match.group(1).lower()] if match else None
+    """Comma-separated state codes, e.g. "PA,DE,MD"."""
+    text = description or ""
+    names: list[str] = []
+    for match in _STATE_RE.finditer(text):
+        names.append(match.group(1))
+        position = match.end()
+        while follow := _NEXT_STATE_RE.match(text, position):
+            names.append(follow.group(1))
+            position = follow.end()
+    codes = dict.fromkeys(_STATE_ABBREVIATIONS[name.lower()] for name in names)
+    return ",".join(codes) or None
 
 
 def classify_project_type(config: DocketPrefixConfig, description: str) -> str:
@@ -715,13 +729,18 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    from scripts.enrich_regions import enrich_regions
+
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         total = run_ingestion(db, args.start_date, args.end_date, prefixes=args.docket_types)
+        print(f"Upserted {total} agency actions ({args.start_date} to {args.end_date}).")
+        # Re-applied every run: an upsert can replace a listed region with one
+        # read from a filing description.
+        print(f"Set region on {enrich_regions(db)} projects.")
     finally:
         db.close()
-    print(f"Upserted {total} agency actions ({args.start_date} to {args.end_date}).")
 
 
 if __name__ == "__main__":

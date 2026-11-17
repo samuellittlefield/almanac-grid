@@ -6,7 +6,7 @@
 <dl>
   <dt>Project type</dt><dd>{{ project.project_type | label }}</dd>
   <dt>Applicant</dt><dd>{{ project.applicant }}</dd>
-  <dt>Region</dt><dd>{{ project.region or "—" }}</dd>
+  <dt>Region</dt><dd>{{ project.region | replace(",", ", ") if project.region else "—" }}</dd>
 </dl>
 
 <h2>Agency actions</h2>

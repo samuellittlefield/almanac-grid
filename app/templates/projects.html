@@ -41,7 +41,7 @@
         <td class="wrap"><a href="/ui/projects/{{ project.id }}">{{ project.name }}</a></td>
         <td>{{ project.project_type | label }}</td>
         <td class="wrap">{{ project.applicant }}</td>
-        <td>{{ project.region or "—" }}</td>
+        <td>{{ project.region | replace(",", ", ") if project.region else "—" }}</td>
         <td>{{ action.docket_number if action else "—" }}</td>
         <td>{{ action.filed_date if action and action.filed_date else "—" }}</td>
         <td>{% if action %}<span class="outcome {{ action.outcome }}">{{ action.outcome | replace("_", " ") }}</span>{% else %}—{% endif %}</td>

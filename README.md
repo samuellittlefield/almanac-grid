@@ -79,8 +79,20 @@ about the result:
   tracked, and an application filed before the window is only included if its
   decision falls inside it. Filing years before the window therefore show only
   the slow cases; filter the dashboard to the window for comparable numbers.
-- **`region`** is filled only when a filing description gives a location
-  ("in Greene County, Pennsylvania"), which most don't.
+- **`region`** is a comma-separated list of state codes (`PA,NJ,NY`), since
+  pipelines cross state lines; the `region` filter matches any one of them.
+  FERC's search results carry no location, so after ingesting, the script
+  (`scripts/enrich_regions.py`, also runnable on its own) fills it from public
+  lists keyed by docket number: EIA's
+  [Natural Gas Pipeline Projects tracker](https://www.eia.gov/naturalgas/data.php)
+  for CP dockets, and FERC's pending-applications and
+  licenses-issued-in-under-two-years spreadsheets for hydro. Where a project
+  isn't on those lists, the state comes from the filing description ("in
+  Greene County, Pennsylvania") if it names one. Coverage is roughly half of
+  gas pipelines and hydro projects. The gaps: smaller certificate work
+  (replacements, compressor changes) isn't in EIA's tracker, and long hydro
+  relicensings are only in FERC's Active Licenses dataset on data.ferc.gov,
+  which needs an API key. EL complaints have no project location.
 - **Rule changes don't remove old rows.** A re-run updates and adds; if you
   change the classification rules in the script, empty the two tables first.
 - **Backstop transmission siting** (the new docket type in S.5653) is not

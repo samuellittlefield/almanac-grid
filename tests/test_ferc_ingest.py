@@ -219,6 +219,14 @@ def test_extract_region():
     assert extract_region("pipeline facilities in Greene County, Pennsylvania") == "PA"
     assert extract_region("facilities in Kanawha County, West Virginia") == "WV"
     assert extract_region("Order Issuing Certificate re X under CP18-1.") is None
+    assert (
+        extract_region("construct facilities located in Pennsylvania, Delaware and Maryland re the Delmar Project")
+        == "PA,DE,MD"
+    )
+    assert (
+        extract_region("in Greene County, Pennsylvania and Marshall County, West Virginia, and Ohio")
+        == "PA,WV,OH"
+    )
     # A state in a company name is not a project location.
     assert extract_region("Texas Eastern Transmission, LP submits an application under CP22-1.") is None
     assert extract_region("Complaint of North Iowa Municipal Electric Cooperative Association under EL21-90.") is None
