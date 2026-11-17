@@ -177,6 +177,12 @@ def test_saved_mlrs_response_decodes_to_denial():
         ([_action("124", "2016-05-01"), _action("970", "2017-01-01"), _action("388", "2017-06-01")], Decision(date(2016, 5, 1))),
         # No 124: Case Established is the filing date.
         ([_action("387", "2020-03-03"), _action("307", "2021-03-03")], Decision(date(2020, 3, 3), "approved", date(2021, 3, 3))),
+        # Easement issued.
+        ([_action("124", "2018-01-01"), _action("345", "2019-01-01")], Decision(date(2018, 1, 1), "approved", date(2019, 1, 1))),
+        # A renewal on its own serial: filed (314), renewed (308).
+        ([_action("314", "2019-05-01"), _action("308", "2019-10-23")], Decision(date(2019, 5, 1), "approved", date(2019, 10, 23))),
+        # A renewal never moves the original grant.
+        ([_action("124", "1999-01-01"), _action("307", "2000-01-01"), _action("314", "2029-01-01"), _action("308", "2030-01-01")], Decision(date(1999, 1, 1), "approved", date(2000, 1, 1))),
         # Post-authorization withdrawal/denial codes don't touch the outcome.
         ([_action("124", "2016-05-01"), _action("307", "2017-01-01"), _action("037", "2019-01-01"), _action("039", "2020-01-01")], Decision(date(2016, 5, 1), "approved", date(2017, 1, 1))),
         # Nothing decided yet.

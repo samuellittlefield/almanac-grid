@@ -93,12 +93,19 @@ PROJECT_TYPES = tuple(group.project_type for group in PRODUCT_GROUPS)
 
 # LR2000 disposition action codes (reports.blm.gov/docs/lr2000/CodeDisposition.pdf).
 FILED_CODES = ("124",)  # Application Received
-ESTABLISHED_CODES = ("387",)  # Case Established: filing-date fallback
+# Filing-date fallbacks, in order: Case Established, then Renewal Application
+# Filed (some renewals get their own serial with no 124).
+ESTABLISHED_CODES = ("387", "314")
 DECISION_CODES = {
     "307": "approved",  # Right-of-Way Issued (LR2000-era actions)
     # Land Use Authorization Issued: what MLRS records for grants made since
     # its 2021-22 launch. Not in the LR2000 code table.
     "8307": "approved",
+    "345": "approved",  # Easement Issued (power-line easements)
+    # ROW Renewed. A renewal filed on its own serial is decided by this, with
+    # no 307. On a case that has its original grant, the grant came first and
+    # wins, so a renewal never moves an approval date.
+    "308": "approved",
     "237": "approved",  # Lease Issued
     "125": "denied",  # Application Rejected/Denied
     "130": "withdrawn",  # Application Withdrawn
@@ -326,8 +333,9 @@ def decode_actions(actions: Iterable[dict]) -> Decision:
     """Filing date and outcome of a case's original application.
 
     Filing date: the earliest Application Received (124), else Case
-    Established (387). Outcome: the first right-of-way-issued (307 / 8307) /
-    lease-issued / rejected / withdrawn action that took effect, read in date
+    Established (387), else Renewal Application Filed (314). Outcome: the
+    first grant (307 / 8307 right-of-way, 345 easement, 308 renewal, 237
+    lease) / rejection / withdrawal action that took effect, read in date
     order. A case closed (967 / 970) without one is `outcome_unclear`
     (closed, direction unknown), unless a rejection or withdrawal was in
     progress when it closed. A reinstatement (388) reopens the case, so
@@ -346,9 +354,11 @@ def decode_actions(actions: Iterable[dict]) -> Decision:
     dated.sort()
 
     result = Decision()
-    filings = [when for when, _, code, _ in dated if code in FILED_CODES]
-    established = [when for when, _, code, _ in dated if code in ESTABLISHED_CODES]
-    result.filed_date = (filings or established or [None])[0]
+    for codes in (FILED_CODES,) + tuple((code,) for code in ESTABLISHED_CODES):
+        found = [when for when, _, code, _ in dated if code in codes]
+        if found:
+            result.filed_date = found[0]
+            break
 
     tentative: tuple[str, date] | None = None
     for when, _, code, effective in dated:
