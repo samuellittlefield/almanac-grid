@@ -84,9 +84,9 @@ obtainable (not just "exists somewhere behind a FOIA request"):
 
 ### Deferred, and why
 
-- **BLM PALS integration** — public-domain and ready to use, but deferred to
-  v2. The data model (below) is built so this attaches later without a
-  rewrite.
+- **BLM data** — v2, now the next build; see "v2: BLM data" below and
+  `spec-v2.md`. (Earlier drafts called this "BLM PALS"; PALS is the Forest
+  Service's system, not BLM's.)
 - **Army Corps / CWA wetlands data** — FOIA-gated; revisit once v1 proves
   there's real demand worth the FOIA turnaround.
 - **Transmission-siting opportunity layer** (wind/solar resource data
@@ -94,9 +94,9 @@ obtainable (not just "exists somewhere behind a FOIA request"):
   more crowded product (incumbents already do GIS-based siting/leasing
   tools), heavier to build, and depends on a DOE designation process that
   doesn't exist until the bill passes.
-- **§1402 statistical "pattern" detection** — needs a trustworthy baseline
-  dataset first; planned as v1.5 once the core tracker has real data and real
-  users.
+- **§1402 statistical "pattern" detection** — still called v1.5, but now
+  built *after* v2, so it runs on FERC and BLM data together. See "§1402 and
+  what FERC data alone can show" below.
 - **Geospatial/parcel-level tooling generally** — avoided for both
   market-crowding reasons (see above) and build-complexity reasons (heavy GIS
   libraries like GDAL/rasterio are the kind of C-extension-heavy packages
@@ -117,6 +117,60 @@ This also sets up something more interesting than a v2 nice-to-have: a
 project's *total* cross-agency time-to-permit is the one number that could
 actually show whether the bill's NEPA lead-agency reform worked. That's
 unreachable with a single-agency-shaped schema.
+
+## §1402 and what FERC data alone can show
+
+Checked against the bill text (Nov 2026). A "pattern of disparate treatment"
+is a *substantial increase*, versus that project type's own previous 5
+calendar years, in the share of permits improperly denied or delayed more than
+60 days past the deadline (1 year from a complete application without NEPA
+review; NEPA §107(g): 1 year for an EA, 2 for an EIS). On a prima facie
+showing the government must produce, per year for 6 years, the number and
+share of projects fully authorized, denied ≥1 permit, and pending >60 days
+past deadline. That table is what v1.5 computes in advance.
+
+Against FERC's 10 years of data:
+
+- **Denials are ~0** (one gas pipeline denial, none for hydro or LNG), so the
+  denial prong can never fire on FERC data; only the delay prong can.
+- **Hydro is chronically past the bill's deadlines** (nearly every license,
+  every year). A type that's always slow can't show an *increase* over its own
+  baseline — a real finding about how §1402 would work in practice.
+- **LNG has 2–8 decisions a year** — too few for a statistical test.
+- **Gas pipelines (~40–80/yr)** are the one FERC type where the test means
+  something.
+- Review tier (EA vs EIS), which sets the deadline, *is* recoverable from
+  eLibrary: 74 of 78 original CP applications in FY22–23 have an EA or EIS
+  issuance on their docket.
+
+So with FERC alone, v1.5 would amount to a gas-pipeline delay monitor. The
+fights §1402 is aimed at — wind and solar on federal land — are BLM decisions,
+which is why v2 comes first.
+
+## v2: BLM data (decided Nov 2026)
+
+Scope: BLM right-of-way decisions for **solar, onshore wind, electric
+transmission, and oil/gas and CO2 pipelines**, plus **geothermal leases**,
+for the same 10-year window. Full build detail in `spec-v2.md`.
+
+- **Sources** (all public, no auth): BLM's national ROW case GIS layers for
+  the case universe and current status; MLRS case actions for application
+  dates and outcomes, decoded with BLM's LR2000 disposition codes (which,
+  unlike FERC data, separate *rejected* from *withdrawn* — so the denial prong
+  becomes measurable); ePlanning for NEPA review tier.
+- **Biggest risk:** MLRS case actions come from an undocumented Salesforce
+  endpoint that can break on Salesforce releases. Mitigated by caching and
+  incremental refetch; the first backfill (~20k cases) is a long job suited
+  to the mini.
+- **Pipelines and transmission are noisy:** BLM data can't separate gas from
+  oil pipelines or transmission from distribution lines, and most cases are
+  small oilfield gathering lines. An `is_major` flag (has an EA or EIS)
+  separates real projects for trend views.
+- **Cross-agency matching** (the same pipeline's FERC certificate and BLM
+  ROW) is v2.1: there's no shared ID, so it's fuzzy matching on applicant,
+  state and dates, kept out of v2 to keep the build tractable.
+- **Not in v2:** drilling permits (APDs — only aggregate stats are public),
+  oil & gas leasing, mining, Forest Service, Army Corps.
 
 ## Non-goals for v1
 
