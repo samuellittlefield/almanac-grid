@@ -1,0 +1,331 @@
+{
+ "actions": [
+  {
+   "id": "1;a",
+   "state": "SUCCESS",
+   "returnValue": {
+    "count": 5,
+    "currentPageToken": "0",
+    "currentPageUrl": "/services/data/v68.0/ui-api/related-list-records/a023d00000GZjGqAAL/Case_Actions__r?fields=Case_Action__c.Id%2CCase_Action__c.Code__c%2CCase_Action__c.Action_Name__c%2CCase_Action__c.Date_Filed__c%2CCase_Action__c.Action_Date__c%2CCase_Action__c.Status__c%2CCase_Action__c.Action_Decision_Date__c%2CCase_Action__c.Effective_Date__c%2CCase_Action__c.Name&pageSize=200&pageToken=0",
+    "fields": [
+     "Case_Action__c.Id",
+     "Case_Action__c.Code__c",
+     "Case_Action__c.Action_Name__c",
+     "Case_Action__c.Date_Filed__c",
+     "Case_Action__c.Action_Date__c",
+     "Case_Action__c.Status__c",
+     "Case_Action__c.Action_Decision_Date__c",
+     "Case_Action__c.Effective_Date__c",
+     "Case_Action__c.Name"
+    ],
+    "listInfoETag": null,
+    "listReference": {
+     "id": null,
+     "inContextOfRecordId": "a023d00000GZjGqAAL",
+     "listViewApiName": null,
+     "objectApiName": null,
+     "parentObjectApiName": "BLM_Case__c",
+     "recordTypeId": "0123d0000005ISCAA2",
+     "relatedListId": "Case_Actions__r",
+     "type": "relatedList"
+    },
+    "nextPageToken": null,
+    "nextPageUrl": null,
+    "optionalFields": [],
+    "pageSize": 200,
+    "previousPageToken": null,
+    "previousPageUrl": null,
+    "records": [
+     {
+      "apiName": "Case_Action__c",
+      "childRelationships": {},
+      "eTag": "ce79051550b2c1c0c256943f506650b5",
+      "fields": {
+       "Action_Date__c": {
+        "displayValue": null,
+        "value": null
+       },
+       "Action_Decision_Date__c": {
+        "displayValue": "1/7/2008",
+        "value": "2008-01-07"
+       },
+       "Action_Name__c": {
+        "displayValue": null,
+        "value": "Case Closed"
+       },
+       "Code__c": {
+        "displayValue": null,
+        "value": "970"
+       },
+       "Date_Filed__c": {
+        "displayValue": "1/7/2008",
+        "value": "2008-01-07"
+       },
+       "Effective_Date__c": {
+        "displayValue": "1/7/2008",
+        "value": "2008-01-07"
+       },
+       "Id": {
+        "displayValue": null,
+        "value": "a053d000004INRjAAO"
+       },
+       "Name": {
+        "displayValue": null,
+        "value": "CA-117722240"
+       },
+       "Status__c": {
+        "displayValue": "Migrated Case Action",
+        "value": "Migrated Case Action"
+       }
+      },
+      "id": "a053d000004INRjAAO",
+      "lastModifiedById": "0053d0000042Yj3AAE",
+      "lastModifiedDate": "2025-05-03T13:12:24.000Z",
+      "recordTypeId": "0123d0000005ISLAA2",
+      "recordTypeInfo": {
+       "available": false,
+       "defaultRecordTypeMapping": false,
+       "master": false,
+       "name": "Land Use Authorizations",
+       "recordTypeId": "0123d0000005ISLAA2"
+      },
+      "systemModstamp": "2025-05-03T13:12:24.000Z",
+      "weakEtag": 1746277944000
+     },
+     {
+      "apiName": "Case_Action__c",
+      "childRelationships": {},
+      "eTag": "7987b1db3a51df150408a925a3466356",
+      "fields": {
+       "Action_Date__c": {
+        "displayValue": null,
+        "value": null
+       },
+       "Action_Decision_Date__c": {
+        "displayValue": "11/27/2007",
+        "value": "2007-11-27"
+       },
+       "Action_Name__c": {
+        "displayValue": null,
+        "value": "APLN REJ/DENIED"
+       },
+       "Code__c": {
+        "displayValue": null,
+        "value": "125"
+       },
+       "Date_Filed__c": {
+        "displayValue": "11/27/2007",
+        "value": "2007-11-27"
+       },
+       "Effective_Date__c": {
+        "displayValue": "11/27/2007",
+        "value": "2007-11-27"
+       },
+       "Id": {
+        "displayValue": null,
+        "value": "a053d000004INRkAAO"
+       },
+       "Name": {
+        "displayValue": null,
+        "value": "CA-117722241"
+       },
+       "Status__c": {
+        "displayValue": "Migrated Case Action",
+        "value": "Migrated Case Action"
+       }
+      },
+      "id": "a053d000004INRkAAO",
+      "lastModifiedById": "0053d0000042Yj3AAE",
+      "lastModifiedDate": "2025-05-03T13:12:24.000Z",
+      "recordTypeId": "0123d0000005ISLAA2",
+      "recordTypeInfo": {
+       "available": false,
+       "defaultRecordTypeMapping": false,
+       "master": false,
+       "name": "Land Use Authorizations",
+       "recordTypeId": "0123d0000005ISLAA2"
+      },
+      "systemModstamp": "2025-05-03T13:12:24.000Z",
+      "weakEtag": 1746277944000
+     },
+     {
+      "apiName": "Case_Action__c",
+      "childRelationships": {},
+      "eTag": "702630d7bbfc4cb643a89378cb75dcd5",
+      "fields": {
+       "Action_Date__c": {
+        "displayValue": null,
+        "value": null
+       },
+       "Action_Decision_Date__c": {
+        "displayValue": "8/9/2007",
+        "value": "2007-08-09"
+       },
+       "Action_Name__c": {
+        "displayValue": null,
+        "value": "MONIES REQUESTED"
+       },
+       "Code__c": {
+        "displayValue": null,
+        "value": "106"
+       },
+       "Date_Filed__c": {
+        "displayValue": "8/9/2007",
+        "value": "2007-08-09"
+       },
+       "Effective_Date__c": {
+        "displayValue": "8/9/2007",
+        "value": "2007-08-09"
+       },
+       "Id": {
+        "displayValue": null,
+        "value": "a053d000004INRgAAO"
+       },
+       "Name": {
+        "displayValue": null,
+        "value": "CA-117722237"
+       },
+       "Status__c": {
+        "displayValue": "Migrated Case Action",
+        "value": "Migrated Case Action"
+       }
+      },
+      "id": "a053d000004INRgAAO",
+      "lastModifiedById": "005t0000003MHbBAAW",
+      "lastModifiedDate": "2024-10-06T19:16:32.000Z",
+      "recordTypeId": "0123d0000005ISLAA2",
+      "recordTypeInfo": {
+       "available": false,
+       "defaultRecordTypeMapping": false,
+       "master": false,
+       "name": "Land Use Authorizations",
+       "recordTypeId": "0123d0000005ISLAA2"
+      },
+      "systemModstamp": "2024-10-06T19:16:32.000Z",
+      "weakEtag": 1728242192000
+     },
+     {
+      "apiName": "Case_Action__c",
+      "childRelationships": {},
+      "eTag": "dae5523ca7a9b1c1e35cf70b83c0fd3f",
+      "fields": {
+       "Action_Date__c": {
+        "displayValue": null,
+        "value": null
+       },
+       "Action_Decision_Date__c": {
+        "displayValue": "8/9/2007",
+        "value": "2007-08-09"
+       },
+       "Action_Name__c": {
+        "displayValue": null,
+        "value": "ADDTL INFO RQSTD"
+       },
+       "Code__c": {
+        "displayValue": null,
+        "value": "104"
+       },
+       "Date_Filed__c": {
+        "displayValue": "8/9/2007",
+        "value": "2007-08-09"
+       },
+       "Effective_Date__c": {
+        "displayValue": "8/9/2007",
+        "value": "2007-08-09"
+       },
+       "Id": {
+        "displayValue": null,
+        "value": "a053d000004INRiAAO"
+       },
+       "Name": {
+        "displayValue": null,
+        "value": "CA-117722239"
+       },
+       "Status__c": {
+        "displayValue": "Migrated Case Action",
+        "value": "Migrated Case Action"
+       }
+      },
+      "id": "a053d000004INRiAAO",
+      "lastModifiedById": "005t0000003MHbBAAW",
+      "lastModifiedDate": "2024-10-06T19:16:32.000Z",
+      "recordTypeId": "0123d0000005ISLAA2",
+      "recordTypeInfo": {
+       "available": false,
+       "defaultRecordTypeMapping": false,
+       "master": false,
+       "name": "Land Use Authorizations",
+       "recordTypeId": "0123d0000005ISLAA2"
+      },
+      "systemModstamp": "2024-10-06T19:16:32.000Z",
+      "weakEtag": 1728242192000
+     },
+     {
+      "apiName": "Case_Action__c",
+      "childRelationships": {},
+      "eTag": "78e7fdf1b41f5ff2577b2b267d702506",
+      "fields": {
+       "Action_Date__c": {
+        "displayValue": null,
+        "value": null
+       },
+       "Action_Decision_Date__c": {
+        "displayValue": "5/21/2007",
+        "value": "2007-05-21"
+       },
+       "Action_Name__c": {
+        "displayValue": null,
+        "value": "APLN RECD"
+       },
+       "Code__c": {
+        "displayValue": null,
+        "value": "124"
+       },
+       "Date_Filed__c": {
+        "displayValue": "5/21/2007",
+        "value": "2007-05-21"
+       },
+       "Effective_Date__c": {
+        "displayValue": "5/21/2007",
+        "value": "2007-05-21"
+       },
+       "Id": {
+        "displayValue": null,
+        "value": "a053d000004INRhAAO"
+       },
+       "Name": {
+        "displayValue": null,
+        "value": "CA-117722238"
+       },
+       "Status__c": {
+        "displayValue": "Migrated Case Action",
+        "value": "Migrated Case Action"
+       }
+      },
+      "id": "a053d000004INRhAAO",
+      "lastModifiedById": "005t0000003MHbBAAW",
+      "lastModifiedDate": "2024-10-06T19:16:32.000Z",
+      "recordTypeId": "0123d0000005ISLAA2",
+      "recordTypeInfo": {
+       "available": false,
+       "defaultRecordTypeMapping": false,
+       "master": false,
+       "name": "Land Use Authorizations",
+       "recordTypeId": "0123d0000005ISLAA2"
+      },
+      "systemModstamp": "2024-10-06T19:16:32.000Z",
+      "weakEtag": 1728242192000
+     }
+    ],
+    "sortBy": [],
+    "where": null
+   },
+   "error": []
+  }
+ ],
+ "context": {
+  "mode": "PROD",
+  "app": "siteforce:communityApp",
+  "fwuid": "ZjkyMTR4bndvTWpXNFdfN1kxVEkxd2tVMjdnTGFERUU2S3FfSVdrcU92bkExNS4zLjE2MDEx"
+ }
+}

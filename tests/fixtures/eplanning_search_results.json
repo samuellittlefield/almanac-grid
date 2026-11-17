@@ -1,0 +1,41 @@
+
+
+
+    {
+ "draw": 0,
+ "recordsTotal": 0,
+ "recordsFiltered": 0,
+ "data": [
+  {
+   "nepanumber": "DOI-BLM-AZ-C020-2022-0006-EIS",
+   "projectid": "8ec379d0-a7f2-f011-8407-001dd80bcf93",
+   "nepastatus": "Completed - Completed",
+   "projectname": "Jove Solar Project",
+   "leadoffice": "Yuma Field Office",
+   "program": "Renewable Energy",
+   "type": "EIS",
+   "count": "3"
+  },
+  {
+   "nepanumber": "DOI-BLM-AZ-0000-2013-0001-EIS",
+   "projectid": "a19f6ba0-a7f2-f011-8407-001dd80bcf93",
+   "nepastatus": "Completed - Completed",
+   "projectname": "Restoration Design Energy Project - RDEP",
+   "leadoffice": "State Office",
+   "program": "Renewable Energy",
+   "type": "EIS",
+   "count": "0"
+  },
+  {
+   "nepanumber": "DOI-BLM-AZ-C000-2022-0001-OTHER_NEPA",
+   "projectid": "b7c279d0-a7f2-f011-8407-001dd80bcf93",
+   "nepastatus": "Planned - Preparation and Planning",
+   "projectname": "N-99912 SW Artist Group Rhyolite Film Permit\CX",
+   "leadoffice": "Colorado River District Office",
+   "program": "Renewable Energy",
+   "type": "",
+   "count": "0"
+  }
+ ]
+}
+

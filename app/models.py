@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -41,5 +41,38 @@ class AgencyAction(Base):
     outcome: Mapped[str] = mapped_column(String, nullable=False, default="pending")
     statutory_deadline: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
     source_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    # NEPA review tier: cx / dna / ea / eis / none; NULL = unknown.
+    review_tier: Mapped[str | None] = mapped_column(String, nullable=True)
+    # True when the action went through an EA or EIS.
+    is_major: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
 
     project: Mapped["Project"] = relationship("Project", back_populates="actions")
+
+
+class BlmCaseCache(Base):
+    """Raw MLRS case-action list per BLM case, so routine runs only refetch
+    cases whose disposition changed in BLM's GIS layers."""
+
+    __tablename__ = "blm_case_cache"
+
+    cse_nr: Mapped[str] = mapped_column(String, primary_key=True)
+    sf_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    fetched_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False)
+    # The case's disposition and disposition date in the GIS layer when the
+    # actions were fetched; a change in either triggers a refetch.
+    cse_disp: Mapped[str | None] = mapped_column(String, nullable=True)
+    cse_disp_dt: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
+    payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
+class BlmEplanningCache(Base):
+    """Parsed fields of one BLM ePlanning (NEPA register) project page."""
+
+    __tablename__ = "blm_eplanning_cache"
+
+    project_id: Mapped[str] = mapped_column(String, primary_key=True)
+    fetched_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False)
+    # NEPA status from the search listing when the page was fetched; a change
+    # triggers a refetch.
+    nepa_status: Mapped[str | None] = mapped_column(String, nullable=True)
+    payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)

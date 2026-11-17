@@ -166,10 +166,12 @@ def _download(session: requests.Session, url: str) -> BinaryIO:
 
 
 def apply_regions(db: Session, states_by_docket: dict[str, list[str]]) -> int:
-    """Set region on every project that has an action under a listed docket.
-    Returns how many projects got a region."""
+    """Set region on every project that has a FERC action under a listed
+    docket. Returns how many projects got a region. BLM regions come from the
+    case's own GIS states and are never touched here."""
     dockets_by_project: dict[int, list[str]] = {}
-    for project_id, docket in db.execute(select(AgencyAction.project_id, AgencyAction.docket_number)):
+    stmt = select(AgencyAction.project_id, AgencyAction.docket_number).where(AgencyAction.agency == "FERC")
+    for project_id, docket in db.execute(stmt):
         dockets_by_project.setdefault(project_id, []).append(base_docket_number(docket))
 
     updated = 0

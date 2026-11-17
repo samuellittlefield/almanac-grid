@@ -1,0 +1,135 @@
+{
+    "displayFieldName": "CSE_NAME",
+    "fieldAliases": {
+        "CSE_NR": "Case Serial Number",
+        "LEG_CSE_NR": "Legacy Case Serial Number",
+        "SF_ID": "Salesforce ID",
+        "BLM_PROD": "BLM Product",
+        "CSE_NAME": "Geographic Name",
+        "GEO_STATE": "Geographic State",
+        "CSE_DISP_DT": "Case Disposition Date",
+        "CUST_NM_SEC": "Business Account Name",
+        "INT_REL_SEC": "Business Account Interest Relationship",
+        "PCT_INT_SEC": "Business Account Percent Interest"
+    },
+    "fields": [
+        {
+            "name": "CSE_NR",
+            "type": "esriFieldTypeString",
+            "alias": "Case Serial Number",
+            "length": 255
+        },
+        {
+            "name": "LEG_CSE_NR",
+            "type": "esriFieldTypeString",
+            "alias": "Legacy Case Serial Number",
+            "length": 255
+        },
+        {
+            "name": "SF_ID",
+            "type": "esriFieldTypeString",
+            "alias": "Salesforce ID",
+            "length": 255
+        },
+        {
+            "name": "BLM_PROD",
+            "type": "esriFieldTypeString",
+            "alias": "BLM Product",
+            "length": 255
+        },
+        {
+            "name": "CSE_NAME",
+            "type": "esriFieldTypeString",
+            "alias": "Geographic Name",
+            "length": 255
+        },
+        {
+            "name": "GEO_STATE",
+            "type": "esriFieldTypeString",
+            "alias": "Geographic State",
+            "length": 2
+        },
+        {
+            "name": "CSE_DISP_DT",
+            "type": "esriFieldTypeDate",
+            "alias": "Case Disposition Date",
+            "length": 8
+        },
+        {
+            "name": "CUST_NM_SEC",
+            "type": "esriFieldTypeString",
+            "alias": "Business Account Name",
+            "length": 255
+        },
+        {
+            "name": "INT_REL_SEC",
+            "type": "esriFieldTypeString",
+            "alias": "Business Account Interest Relationship",
+            "length": 255
+        },
+        {
+            "name": "PCT_INT_SEC",
+            "type": "esriFieldTypeDouble",
+            "alias": "Business Account Percent Interest"
+        }
+    ],
+    "features": [
+        {
+            "attributes": {
+                "CSE_NR": "NMNM106325500",
+                "LEG_CSE_NR": "",
+                "SF_ID": "a023d00000HEtozAAD",
+                "BLM_PROD": "Solar Development Grant",
+                "CSE_NAME": null,
+                "GEO_STATE": "NM",
+                "CSE_DISP_DT": 1701388740000,
+                "CUST_NM_SEC": "201LC 8ME LLC",
+                "INT_REL_SEC": "Applicant",
+                "PCT_INT_SEC": 0.0
+            }
+        },
+        {
+            "attributes": {
+                "CSE_NR": "AZAZ105846925",
+                "LEG_CSE_NR": "AZA    03418702",
+                "SF_ID": "a023d00000Ga2HoAAJ",
+                "BLM_PROD": "Solar Development Grant",
+                "CSE_NAME": null,
+                "GEO_STATE": "AZ",
+                "CSE_DISP_DT": 1686268740000,
+                "CUST_NM_SEC": "SONORAN SOLAR ENERGY LLC",
+                "INT_REL_SEC": "Holder",
+                "PCT_INT_SEC": 0.0
+            }
+        },
+        {
+            "attributes": {
+                "CSE_NR": "AZAZ105853375",
+                "LEG_CSE_NR": "AZA    03418703",
+                "SF_ID": "a023d00000GZtbpAAD",
+                "BLM_PROD": "Solar Development Grant",
+                "CSE_NAME": null,
+                "GEO_STATE": "AZ",
+                "CSE_DISP_DT": 1686268740000,
+                "CUST_NM_SEC": "SONORAN SOLAR ENERGY LLC",
+                "INT_REL_SEC": "Applicant",
+                "PCT_INT_SEC": 100.0
+            }
+        },
+        {
+            "attributes": {
+                "CSE_NR": "AZAZ106128638",
+                "LEG_CSE_NR": "AZA    034739",
+                "SF_ID": "a023d00000GZanZAAT",
+                "BLM_PROD": "Solar Development Grant",
+                "CSE_NAME": "LITTLE HORN NORTH",
+                "GEO_STATE": "AZ",
+                "CSE_DISP_DT": 1628639940000,
+                "CUST_NM_SEC": "IDIT INC",
+                "INT_REL_SEC": "Applicant",
+                "PCT_INT_SEC": 100.0
+            }
+        }
+    ],
+    "exceededTransferLimit": true
+}
