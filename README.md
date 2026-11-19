@@ -277,6 +277,23 @@ without notice:
   the new call by watching a case page's network requests.
 - **Throttle:** at most 2 requests per second. Don't raise it.
 
+## Analyses
+
+One-off analyses live in `analysis/`. They read the local database and print
+results; none of them write to it.
+
+- `python -m analysis.s1402_blm [--json PATH]`: a §1402-style check on BLM
+  project types. Prints, per type and year since 2016, decisions by outcome,
+  the open queue at year end, how much of it is past the bill's deadlines,
+  the 5-year baselines the bill compares against, and the share of each
+  filing year's applications decided within 12 months. Definitions and
+  approximations are in the script's docstring. Behind the November 2026
+  write-up "Solar Permitting on BLM Land Under §1402".
+- `python -m analysis.major_flag_audit`: where BLM `is_major` flags come
+  from: matched on the case's own serial, inherited by a segment from its
+  base serial, or taken from a review that started after the decision.
+  Re-reads BLM's GIS case layers (a few minutes, public).
+
 ## Run the app
 
 ```bash
