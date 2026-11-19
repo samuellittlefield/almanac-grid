@@ -143,6 +143,24 @@ Against FERC's 10 years of data:
   eLibrary: 74 of 78 original CP applications in FY22–23 have an EA or EIS
   issuance on their docket.
 
+What a claim needs and gets (§1402(b)(3) and (d), read Nov 2026):
+
+- **Only post-enactment patterns count.** The pattern must persist at least
+  180 days after enactment (280 for permits needing an EA or EIS) and result
+  from "an intentional course of action" by the government. Pre-enactment
+  data is only the baseline. A type that slowed before enactment therefore
+  has a high baseline and is hard to bring a claim for (BLM solar: 77–92%
+  of open applications overdue in 2024–26).
+- **Deadlines run from a *complete* application**, which public records
+  don't show; BLM and FERC give the date an application arrived.
+- **Remedies:** injunctive relief, fees, economic damages, and 50–100% of the
+  project's expected construction cost, paid from the Judgment Fund. The
+  applicant must show it can build, and must build or repay. No class
+  actions; venue is the district where the project sits.
+
+So for v1.5, the product isn't a verdict on past years but a monitor that
+starts at enactment and measures against the five years before it.
+
 So with FERC alone, v1.5 would amount to a gas-pipeline delay monitor. The
 fights §1402 is aimed at — wind and solar on federal land — are BLM decisions,
 which is why v2 comes first.
