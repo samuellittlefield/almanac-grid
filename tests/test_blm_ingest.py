@@ -130,6 +130,38 @@ def test_fetch_cases_queries_every_layer_with_window_on_decided_ones():
     assert "'Solar Development Lease'" in wheres["1"]
 
 
+class FlakyArcgis:
+    """Answers HTTP 200 with an ArcGIS error body for the first `failures`
+    requests, as BLM's server does intermittently."""
+
+    ERROR = {"error": {"code": 500, "message": "Error performing query operation", "details": []}}
+
+    def __init__(self, failures):
+        self.failures = failures
+        self.calls = 0
+
+    def get(self, url, params, timeout):
+        self.calls += 1
+        body = self.ERROR if self.calls <= self.failures else {"features": []}
+        return FakeResponse(json.dumps(body))
+
+
+def test_layer_query_retries_arcgis_error_bodies(monkeypatch):
+    monkeypatch.setattr(ingest_blm.time, "sleep", lambda _: None)
+    session = FlakyArcgis(failures=3)
+    rows = list(ingest_blm.iter_layer_rows(session, ingest_blm.ROW_SERVICE, 0, "1=1", "CSE_NR"))
+    assert rows == []
+    assert session.calls == 4
+
+
+def test_layer_query_reports_an_error_that_persists(monkeypatch):
+    monkeypatch.setattr(ingest_blm.time, "sleep", lambda _: None)
+    session = FlakyArcgis(failures=100)
+    with pytest.raises(RuntimeError, match="Error performing query operation"):
+        list(ingest_blm.iter_layer_rows(session, ingest_blm.ROW_SERVICE, 0, "1=1", "CSE_NR"))
+    assert session.calls == 8
+
+
 # --- Source 2: MLRS actions -> outcome -------------------------------------
 
 

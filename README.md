@@ -136,10 +136,14 @@ it ran at about 1.2 pages a second despite fetching 8 at a time under the same
 2-per-second cap), then 3 minutes to load the rows. Both caches commit as they go, so an interrupted backfill
 resumes where it stopped. Run the two `--only` commands side by side (they use
 different sites), then a plain run to load the rows. After that, a run takes
-about a minute: the GIS layers and ePlanning's project listing are re-read in
+a few minutes: the GIS layers and ePlanning's project listing are re-read in
 full, and only cases whose disposition changed and NEPA projects whose status
 changed are refetched (an hour after the backfill, that was 2 cases and 9
 projects; with nothing changed upstream, a run makes no MLRS requests).
+BLM's GIS server fails some queries at random, answering HTTP 200 with an
+`{"error": {"code": 500}}` body (about one in three on Nov 19, 2026); each
+layer query is retried up to 8 times, which can stretch the layer fetch from
+about a minute to about 4.
 
 ### Where BLM data comes from
 

@@ -260,16 +260,24 @@ def iter_layer_rows(session: requests.Session, service: str, layer: int, where: 
         offset += len(features)
 
 
-def _get_json(session: requests.Session, url: str, params: dict, attempts: int = 4) -> dict:
+def _get_json(session: requests.Session, url: str, params: dict, attempts: int = 8) -> dict:
+    """GET with retries. BLM's ArcGIS server intermittently fails queries
+    with HTTP 200 and an `{"error": {"code": 500, ...}}` body (about one
+    request in three in Nov 2026), so an error body is retried like a
+    network error. After the last attempt the error body is returned for the
+    caller to report."""
     for attempt in range(attempts):
         try:
             response = session.get(url, params=params, timeout=120)
             response.raise_for_status()
-            return response.json()
+            body = response.json()
         except (requests.RequestException, ValueError):
             if attempt == attempts - 1:
                 raise
-            time.sleep(5 * (attempt + 1))
+        else:
+            if "error" not in body or attempt == attempts - 1:
+                return body
+        time.sleep(min(5 * (attempt + 1), 30))
     raise AssertionError("unreachable")
 
 
