@@ -187,6 +187,66 @@ def compute(snapshot: Path) -> dict:
     return out
 
 
+STATUS_AGE_MONTHS = 36
+STATUS_PERIODS = [("2016–19", 2016, 2019), ("2020–22", 2020, 2022), ("2023", 2023, 2023)]
+STATUS_OUTCOMES = ["approved", "denied", "withdrawn", "outcome_unclear", "pending"]
+
+
+def add_months(d: date, months: int) -> date:
+    y, m = divmod(d.month - 1 + months, 12)
+    year, month = d.year + y, m + 1
+    for day in (d.day, 30, 29, 28):
+        try:
+            return date(year, month, day)
+        except ValueError:
+            continue
+    raise ValueError(d)
+
+
+def solar_status_at_36(snapshot: Path, as_of: date) -> dict:
+    """Every BLM solar application, as it stood 36 months after filing.
+
+    Unlike the other figures, this keeps records whose decision is dated before
+    the filing date: a decision on or before the 36-month mark counts, whatever
+    its date. Only applications at least 36 months old on as_of qualify.
+    """
+    solar_projects = set()
+    with open(snapshot / "project.csv", newline="") as f:
+        for p in csv.DictReader(f):
+            if p["project_type"] == "solar":
+                solar_projects.add(p["id"])
+    rows = []
+    with open(snapshot / "agency_action.csv", newline="") as f:
+        for a in csv.DictReader(f):
+            if a["agency"] == "BLM" and a["project_id"] in solar_projects:
+                rows.append({"serial": a["docket_number"], "filed": to_date(a["filed_date"]),
+                             "decided": to_date(a["decision_date"]), "outcome": a["outcome"]})
+    periods = []
+    for label, first, last in STATUS_PERIODS:
+        filed = [r for r in rows if r["filed"] and first <= r["filed"].year <= last]
+        old_enough = [r for r in filed if add_months(r["filed"], STATUS_AGE_MONTHS) <= as_of]
+        counts = dict.fromkeys(STATUS_OUTCOMES, 0)
+        for r in old_enough:
+            mark = add_months(r["filed"], STATUS_AGE_MONTHS)
+            decided = r["outcome"] != "pending" and r["decided"] and r["decided"] <= mark
+            counts[r["outcome"] if decided else "pending"] += 1
+        n = len(old_enough)
+        periods.append({
+            "label": label, "first": first, "last": last,
+            "applications": n, "filed_in_period": len(filed), "too_young": len(filed) - n,
+            **counts, **{f"{k}_pct": share(v, n) for k, v in counts.items()},
+        })
+    cutoff = add_months(as_of, -STATUS_AGE_MONTHS)
+    return {
+        "age_months": STATUS_AGE_MONTHS,
+        "filed_on_or_before": cutoff.isoformat(),
+        "periods": periods,
+        "decided_before_filing": sorted(r["serial"] for r in rows if r["filed"] and r["decided"] and r["decided"] < r["filed"]),
+        "later_filings_not_shown": sum(1 for r in rows if r["filed"] and r["filed"] > cutoff),
+        "without_filing_date": sum(1 for r in rows if not r["filed"]),
+    }
+
+
 def pooled(cohorts: list[dict], first: int, last: int) -> dict:
     sel = [c for c in cohorts if first <= c["year"] <= last]
     within, filed = sum(c["within"] for c in sel), sum(c["filed"] for c in sel)
@@ -292,14 +352,17 @@ def main(argv: list[str] | None = None) -> None:
         "overdue_2025": solar["overdue"][-2] | {"baseline": solar["baseline"][2025], "baseline_10": solar["baseline_10"][2025]},
         "overdue_2026": solar["overdue"][-1] | {"baseline": solar["baseline"][2026], "baseline_10": solar["baseline_10"][2026]},
     }
+    fig["solar_status_36_months"] = solar_status_at_36(snapshot, date.fromisoformat(fig["as_of"]))
 
     env = Environment(loader=FileSystemLoader(SITE), autoescape=select_autoescape(["html"]))
     env.filters["pct"] = fmt_pct
     env.filters["num"] = lambda v: f"{v:,}"
+    env.filters["isodate"] = lambda v: date.fromisoformat(v).strftime("%B %-d, %Y")
     html = env.get_template("template.html").render(
         f=fig,
         solar=solar,
         lead=fig["solar_lead"],
+        s36=fig["solar_status_36_months"],
         as_of=date.fromisoformat(fig["as_of"]),
         sums=sums,
         linkedin=args.linkedin,
@@ -313,6 +376,8 @@ def main(argv: list[str] | None = None) -> None:
     (args.out / "figures.json").write_text(json.dumps(fig, separators=(",", ":"), default=str))
     print(f"Built {args.out / 'index.html'} from {snapshot} (data as of {fig['as_of']})")
     print(f"  2025 solar filings without a full 12 months yet: {solar['last_cohort_short']} of {solar['cohorts'][-1]['filed']}")
+    for p in fig["solar_status_36_months"]["periods"]:
+        print(f"  36-month status, filed {p['label']}: {p['applications']} of {p['filed_in_period']} old enough")
     if not args.linkedin:
         print("  No --linkedin given: the byline has no link yet.")
 
