@@ -311,6 +311,11 @@ results; none of them write to it.
   `place_fetch --only queued_up counties`, and writes only its own `place_*`
   tables. Write-up:
   [docs/place-filings-vs-queue.md](docs/place-filings-vs-queue.md).
+- `python -m analysis.place_filing_outcomes`: Place spike 3. Outcomes of
+  those BLM solar filings by filing period and county group, both current
+  and 36 months after filing, plus applicant concentration. It reads the
+  `place_filings` tables and writes nothing. Write-up:
+  [docs/place-filing-outcomes.md](docs/place-filing-outcomes.md).
 
 ## Run the app
 
