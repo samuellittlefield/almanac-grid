@@ -326,3 +326,31 @@ Interactive API docs are at `/docs`.
 Tests run against an in-memory SQLite database and saved samples of FERC
 search results and BLM GIS, MLRS and ePlanning responses (`tests/fixtures/`);
 they never contact FERC, BLM or Postgres.
+
+## Public page
+
+`site/build.py` builds one static page (`site/dist/index.html`, plus
+`figures.json` with every number it shows) from a frozen snapshot, never from
+the live database. Snapshots live in `snapshots/<date>/` and stay out of git:
+
+```bash
+S=snapshots/$(date +%F); mkdir -p $S
+pg_dump -Fc -f $S/almanac_grid.dump almanac_grid
+psql -q almanac_grid -c "\copy (select * from project order by id) to '$S/project.csv' csv header"
+psql -q almanac_grid -c "\copy (select * from agency_action order by id) to '$S/agency_action.csv' csv header"
+.venv/bin/python -m analysis.s1402_blm --json $S/s1402_blm.json > $S/s1402_blm.txt
+(cd $S && shasum -a 256 almanac_grid.dump project.csv agency_action.csv s1402_blm.json s1402_blm.txt > SHA256SUMS)
+```
+
+```bash
+.venv/bin/python site/build.py --linkedin <profile URL>   # newest snapshot; --snapshot to pick one
+python3 -m http.server 8765 --directory site/dist           # preview
+```
+
+The build refuses to run if any snapshot file no longer matches `SHA256SUMS`.
+
+The page is served by the Vercel project `almanac-grid` (no build step; the
+two files in `site/dist` are uploaded as a production deployment) at
+https://almanac.samuellittlefield.com. The domain's DNS is at GoDaddy, where
+`almanac` is a CNAME to Vercel. Build with
+`--site-url https://almanac.samuellittlefield.com/` so the canonical link is set.

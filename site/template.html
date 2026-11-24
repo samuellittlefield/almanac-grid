@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Almanac Grid · BLM solar permitting</title>
+<meta name="description" content="How long the Bureau of Land Management takes to decide solar, wind, geothermal, transmission and pipeline applications, 2016 to {{ as_of.strftime('%B %Y') }}. Free, from public BLM records.">
+{% if site_url %}<link rel="canonical" href="{{ site_url }}">{% endif %}
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #6f6d68;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --callout: #f0efec;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9a988f;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --callout: #232322;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #9a988f;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --callout: #232322;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+a { color: inherit; text-underline-offset: 2px; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+header.top { border-bottom: 1px solid var(--border); background: var(--surface); }
+header.top .wrap { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+.brand { font-weight: 650; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; }
+.byline { font-size: 14px; color: var(--ink-2); }
+.byline .todo { outline: 2px dashed var(--s2); outline-offset: 2px; }
+main { padding: 32px 0 48px; }
+.kicker { font-size: 14px; color: var(--ink-2); margin: 0 0 8px; }
+h1 { font-size: clamp(26px, 5vw, 34px); line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 16px; font-weight: 650; }
+h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 8px; font-weight: 650; letter-spacing: -0.01em; }
+h3 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
+p { margin: 0 0 14px; }
+.lede { font-size: 18px; }
+.sub { color: var(--ink-2); font-size: 15px; }
+.small { font-size: 14px; color: var(--ink-2); }
+.readfirst {
+  background: var(--callout); border-radius: 8px; padding: 16px 20px; margin: 24px 0 8px; font-size: 15px;
+}
+.readfirst h2 { font-size: 16px; margin: 0 0 8px; }
+.readfirst ul { margin: 0; padding-left: 20px; }
+.readfirst li { margin: 0 0 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 20px 0 8px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+.stat .label { font-size: 14px; color: var(--ink-2); }
+.stat .value { font-size: 32px; font-weight: 620; line-height: 1.15; margin: 2px 0; }
+.stat .ctx { font-size: 14px; color: var(--ink-2); }
+figure { margin: 20px 0 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 16px 12px; }
+figcaption { margin-bottom: 12px; }
+figcaption .t { font-weight: 600; }
+figcaption .d { font-size: 14px; color: var(--ink-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; color: var(--ink-2); margin-bottom: 8px; }
+.key { display: inline-block; width: 16px; height: 2px; vertical-align: middle; margin-right: 6px; border-radius: 1px; }
+.key.s1 { background: var(--s1); } .key.s2 { background: var(--s2); }
+.key.s3 { background: repeating-linear-gradient(90deg, var(--s3) 0 5px, transparent 5px 8px); }
+.fnote { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+
+/* charts (CSS layout: text stays at its real size on any screen) */
+.plot { position: relative; height: var(--plot-h); margin-left: 40px; border-bottom: 1px solid var(--axis); }
+.grid { position: absolute; left: 0; right: 0; border-top: 1px solid var(--grid); height: 0; }
+.grid span { position: absolute; right: calc(100% + 6px); top: -9px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.grid:first-child { border-top-color: transparent; }
+.cols { position: absolute; inset: 0; display: flex; }
+.col { flex: 1; position: relative; display: flex; justify-content: center; align-items: flex-end; outline: none; cursor: default; }
+.col .bar { width: min(24px, 70%); background: var(--s1); border-radius: 4px 4px 0 0; }
+.col .bar.zero { height: 0; }
+.col:hover, .col:focus-visible { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.col:focus-visible { box-shadow: inset 0 0 0 2px var(--s1); }
+.xaxis { display: flex; margin-left: 40px; }
+.x { flex: 1; text-align: center; font-size: 12px; color: var(--muted); padding-top: 4px; font-variant-numeric: tabular-nums; line-height: 1.3; min-width: 0; }
+.x .n { display: block; font-size: 11px; }
+.cchart[style*="130px"] .x { white-space: nowrap; overflow: visible; }
+.lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lines polyline { fill: none; stroke-width: 2px; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.lines .s1 { stroke: var(--s1); } .lines .s2 { stroke: var(--s2); }
+.lines .s3 { stroke: var(--s3); stroke-dasharray: 5 3; }
+.dot { position: absolute; width: 10px; height: 10px; margin: 0 0 -5px -5px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
+.dot.s1 { background: var(--s1); } .dot.s2 { background: var(--s2); } .dot.s3 { background: var(--s3); }
+.hit { position: absolute; top: 0; bottom: 0; width: 28px; margin-left: -14px; outline: none; }
+.hit:hover, .hit:focus-visible { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.hit:focus-visible { box-shadow: inset 0 0 0 2px var(--s1); }
+.endlabel { position: absolute; transform: translate(-50%, -22px); font-size: 12px; font-weight: 600; color: var(--ink); pointer-events: none; background: var(--surface); padding: 0 2px; border-radius: 3px; }
+/* baseline end labels: right-aligned just past the last dot, the upper one above it, the lower one below */
+.endlabel.base { transform: translate(calc(-100% + 10px), -20px); white-space: nowrap; font-weight: 500; }
+.endlabel.base.below { transform: translate(calc(-100% + 10px), calc(100% + 4px)); }
+.ys { display: none; }
+@media (max-width: 520px) {
+  .lchart .x:nth-child(even) { color: transparent; }
+  .cchart:not([style*="130px"]) .yl { display: none; } .cchart:not([style*="130px"]) .ys { display: inline; }
+  .x .np { display: none; }
+  .endlabel.base { display: none; } /* too narrow: they would cover the 2025 points */
+}
+
+.multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px 20px; }
+.multiples .m h3 { font-size: 14px; line-height: 1.35; min-height: 2.7em; }
+.multiples .m .plot { margin-left: 34px; }
+.multiples .m .xaxis { margin-left: 34px; }
+.multiples .m .x:first-child { text-align: left; } .multiples .m .x:last-child { text-align: right; }
+.multiples .m .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+.tip { position: fixed; z-index: 10; pointer-events: none; max-width: 260px; background: var(--ink); color: var(--page); font-size: 13px; line-height: 1.4; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .08s; }
+.tip.on { opacity: 1; }
+
+details { margin-top: 10px; font-size: 14px; }
+summary { cursor: pointer; color: var(--ink-2); }
+.tablewrap { overflow-x: auto; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; white-space: normal; }
+thead th { font-weight: 600; color: var(--ink-2); vertical-align: bottom; white-space: normal; min-width: 64px; }
+th:first-child, td:first-child { min-width: 150px; }
+.big table { font-size: 15px; }
+.method h3 { margin-top: 20px; }
+.method ul { padding-left: 20px; }
+.method li { margin-bottom: 6px; }
+code { font-size: 13px; background: var(--callout); padding: 1px 4px; border-radius: 3px; overflow-wrap: anywhere; }
+.sums code { display: block; white-space: pre-wrap; word-break: break-all; padding: 8px; }
+footer { border-top: 1px solid var(--border); padding: 20px 0 40px; font-size: 14px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./">Almanac Grid</a>
+    <span class="byline">Built by {% if linkedin %}<a href="{{ linkedin }}" rel="author">Samuel Littlefield</a>{% else %}<a class="todo" href="#" title="LinkedIn URL not set yet">Samuel Littlefield</a>{% endif %}</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="kicker">Federal permitting decisions · Bureau of Land Management · data as of {{ as_of.strftime('%B %-d, %Y') }}</p>
+  <h1>How long BLM takes to decide solar right-of-way applications</h1>
+  <p class="lede">Of solar applications filed with the Bureau of Land Management in {{ lead.early.first }}–{{ lead.early.last }}, {{ lead.early.pct|pct }} were decided within 12 months. Of those filed in {{ lead.late.first }}–{{ lead.late.last }}, {{ lead.late.pct|pct }} were.</p>
+  <p class="sub">Almanac Grid is a free tracker of federal permitting outcomes, built from public agency records. This page covers BLM rights-of-way for solar, wind, transmission and pipelines, and geothermal leases.</p>
+
+  <section class="readfirst" aria-labelledby="rf">
+    <h2 id="rf">Read this first</h2>
+    <ul>
+      <li><strong>The clock starts when an application arrived, not when it was complete.</strong> BLM records the date it received an application. It does not publish when an application was complete enough to process. Every elapsed time and overdue share on this page therefore overstates delay, by an unknown amount that may differ by project type and year.</li>
+      <li><strong>Solar and wind denial and withdrawal rates are lower bounds.</strong> BLM closed {{ solar.outcomes.outcome_unclear_pct|pct }} of the solar decisions here, and {{ f.groups[1].outcomes.outcome_unclear_pct|pct }} of the wind decisions, without recording a grant, rejection or withdrawal. Some of those were likely rejections or withdrawals.</li>
+      <li><strong>"Decided" means any final disposition:</strong> granted, rejected, withdrawn, or closed. It is not the same as approved.</li>
+      <li><strong>The numbers are small.</strong> {{ solar.cohorts|map(attribute='filed')|min }} to {{ solar.cohorts|map(attribute='filed')|max }} solar applications a year, and {{ f.groups[1].cohorts|map(attribute='filed')|min }} to {{ f.groups[1].cohorts|map(attribute='filed')|max }} for wind. A few cases move a year's percentage by several points.</li>
+      <li><strong>§1402 is part of BAAJA, which passed the Senate on November 19, 2026, as an amendment to H.R. 2347. It is not law.</strong> The deadline comparison below applies the bill's test to past years. Under the bill only patterns after enactment would count, so these figures are not a finding under it.</li>
+    </ul>
+    <p class="small" style="margin:10px 0 0">Full definitions, sources and exclusions are in <a href="#method">Methodology</a>.</p>
+  </section>
+
+  <h2 id="solar">Solar: decided within 12 months, by filing year</h2>
+  <div class="stats">
+    <div class="stat"><div class="label">Filed {{ lead.early.first }}–{{ lead.early.last }}</div><div class="value">{{ lead.early.pct|pct }}</div><div class="ctx">{{ lead.early.within }} of {{ lead.early.filed }} decided within 12 months</div></div>
+    <div class="stat"><div class="label">Filed {{ lead.late.first }}–{{ lead.late.last }}</div><div class="value">{{ lead.late.pct|pct }}</div><div class="ctx">{{ lead.late.within }} of {{ lead.late.filed }} decided within 12 months</div></div>
+  </div>
+  <figure>
+    <figcaption><div class="t">Share of solar applications decided within 12 months of filing</div><div class="d">By year filed. n = applications filed that year with a recorded filing date.</div></figcaption>
+    {{ lead_chart }}
+    <p class="fnote">* {{ solar.last_cohort_short }} of the {{ solar.cohorts[-1].filed }} applications filed in {{ solar.cohorts[-1].year }} were filed after {{ as_of.strftime('%B %-d') }}, {{ as_of.year - 1 }}, and have not yet had 12 months. {{ as_of.year }} filings are not shown.</p>
+    <details><summary>Table</summary><div class="tablewrap"><table>
+      <thead><tr><th>Year filed</th><th>Filed</th><th>Decided within 12 months</th><th>Share</th></tr></thead>
+      <tbody>{% for c in solar.cohorts %}<tr><td>{{ c.year }}</td><td>{{ c.filed }}</td><td>{{ c.within }}</td><td>{{ c.pct|pct(1) }}</td></tr>{% endfor %}</tbody>
+    </table></div></details>
+  </figure>
+
+  <h2 id="s1402">Solar applications past the §1402 deadline</h2>
+  <p>§1402 is part of BAAJA, which passed the Senate on November 19, 2026, as an amendment to H.R. 2347. It is not law. It would compare, for each project type, the share of applications pending more than 60 days past their deadline with the same share over a lookback period of earlier years. Here the deadline is 1 year from filing, or 2 years for cases with an environmental impact statement (EIS). The chart shows that share for the open queue at the end of each year, next to two baselines: the previous 5 year ends pooled, which is the introduced text's lookback, and the previous 10 year ends pooled, which is the lookback reportedly in the Senate-passed version (not yet verified against the passed text). The data starts in {{ 2016 }}, so {{ as_of.year }} is the only year with a full 10-year window. The gap holds under either lookback.</p>
+  {% macro base_ctx(o) %}{{ o.overdue }} of {{ o.open }} open applications overdue.<br>Baseline, 5 years ({{ o.year - 5 }}–{{ o.year - 1 }}): {{ o.baseline|pct }}<br>Baseline, 10 years ({{ o.baseline_10.first }}–{{ o.baseline_10.last }}{% if o.baseline_10.years < 10 %}, the {{ o.baseline_10.years }} available{% endif %}): {{ o.baseline_10.pct|pct }}{% endmacro %}
+  <div class="stats">
+    <div class="stat"><div class="label">End of {{ lead.overdue_2025.year }}</div><div class="value">{{ lead.overdue_2025.pct|pct }}</div><div class="ctx">{{ base_ctx(lead.overdue_2025) }}</div></div>
+    <div class="stat"><div class="label">{{ as_of.strftime('%B %-d') }}, {{ lead.overdue_2026.year }}</div><div class="value">{{ lead.overdue_2026.pct|pct }}</div><div class="ctx">{{ base_ctx(lead.overdue_2026) }}</div></div>
+  </div>
+  <figure>
+    <figcaption><div class="t">Share of open solar applications more than 60 days past deadline</div><div class="d">At year end. Baselines pool the previous 5 or 10 year ends (both first shown for 2021). The data starts in {{ 2016 }}, so before {{ as_of.year }} the 10-year baseline pools only the years since {{ 2016 }}.</div></figcaption>
+    <div class="legend"><span><span class="key s1"></span>Overdue share</span><span><span class="key s2"></span>Baseline, previous 5 years (introduced text)</span><span><span class="key s3"></span>Baseline, previous 10 years (reportedly the Senate-passed text; not yet verified)</span></div>
+    {{ overdue_chart }}
+    <p class="fnote">* {{ as_of.year }} is measured on {{ as_of.strftime('%B %-d') }}, not year end. Only {{ solar.with_review_tier }} of {{ solar.cases }} solar cases have a known review tier; the rest get the 1-year deadline, which counts some EIS-scale projects as overdue a year early.</p>
+    <details><summary>Table</summary><div class="tablewrap"><table>
+      <thead><tr><th>Year</th><th>Open at year end</th><th>Overdue</th><th>Share</th><th>Baseline, 5 years</th><th>Baseline, 10 years</th></tr></thead>
+      <tbody>{% for o in solar.overdue %}{% set b10 = solar.baseline_10.get(o.year) %}<tr><td>{{ o.year }}{% if loop.last %}*{% endif %}</td><td>{{ o.open }}</td><td>{{ o.overdue }}</td><td>{{ o.pct|pct(1) }}</td><td>{{ solar.baseline.get(o.year)|pct(1) }}</td><td>{% if b10 %}{{ b10.pct|pct(1) }} <span class="small">({{ b10.first }}–{{ b10.last }})</span>{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+    </table></div></details>
+  </figure>
+
+  <h2 id="types">Decision timing by project type</h2>
+  <p>The same 12-month measure for each BLM project type tracked here. Pipelines and transmission are limited to cases with an environmental assessment (EA) or EIS, which separates large projects from the many small lines in BLM's records.</p>
+  <figure>
+    <figcaption><div class="t">Share decided within 12 months of filing, by year filed, {{ f.groups[0].cohorts[0].year }}–{{ f.groups[0].cohorts[-1].year }}</div><div class="d">Same scale in every panel. Hover or focus a column for its numbers.</div></figcaption>
+    <div class="multiples">
+      {% for g, chart in multiples %}
+      <div class="m"><h3>{{ g.label }}</h3>{{ chart }}{% if g.note %}<p class="note">{{ g.note }}</p>{% endif %}</div>
+      {% endfor %}
+    </div>
+    <details><summary>Table</summary><div class="tablewrap"><table>
+      <thead><tr><th>Year filed</th>{% for g in f.groups %}<th>{{ g.label }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for i in range(f.groups[0].cohorts|length) %}<tr><td>{{ f.groups[0].cohorts[i].year }}</td>{% for g in f.groups %}<td>{{ g.cohorts[i].pct|pct }} <span class="small">({{ g.cohorts[i].filed }})</span></td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table></div></details>
+  </figure>
+
+  <h3 style="margin-top:28px">Applications filed {{ 2016 }}–{{ 2023 }}: how long they took</h3>
+  <p class="small">Every application filed in these years has had at least 34 months. Median and middle half are for decided applications only; the ones still pending have taken longer than any of them.</p>
+  <div class="tablewrap big"><table>
+    <thead><tr><th>Project type</th><th>Filed</th><th>Decided ≤ 12 mo</th><th>Decided ≤ 24 mo</th><th>Still pending</th><th>Months to decision: median (middle half)</th></tr></thead>
+    <tbody>{% for g in f.groups %}{% set t = g.timing %}<tr><td>{{ g.label }}</td><td>{{ t.filed|num }}</td><td>{{ t.within_12_months_pct|pct }}</td><td>{{ t.within_24_months_pct|pct }}</td><td>{{ t.pending_pct|pct }}</td><td>{{ t.median_months_to_decision }} <span class="small">({{ t.quartile_months[0] }}–{{ t.quartile_months[1] }})</span></td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h3 style="margin-top:28px">How decisions ended, {{ 2016 }}–{{ as_of.year }}</h3>
+  <p class="small">Decisions dated {{ 2016 }} through {{ as_of.strftime('%B %-d, %Y') }}, by outcome. "Closed, no reason recorded" are cases BLM closed without a grant, rejection or withdrawal in the record. Where that column is large, the rejected and withdrawn shares are lower bounds.</p>
+  <div class="tablewrap big"><table>
+    <thead><tr><th>Project type</th><th>Decisions</th><th>Granted</th><th>Rejected</th><th>Withdrawn</th><th>Closed, no reason recorded</th></tr></thead>
+    <tbody>{% for g in f.groups %}{% set o = g.outcomes %}<tr><td>{{ g.label }}</td><td>{{ o.decisions|num }}</td><td>{{ o.approved_pct|pct }}</td><td>{{ o.denied_pct|pct }}</td><td>{{ o.withdrawn_pct|pct }}</td><td>{{ o.outcome_unclear_pct|pct }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <section class="method" id="method">
+    <h2>Methodology</h2>
+    <h3>Sources</h3>
+    <ul>
+      <li><strong>BLM national case GIS layers</strong> for rights-of-way and geothermal leases: which cases exist, their product type, states and current disposition.</li>
+      <li><strong>BLM's Mineral &amp; Land Records System (MLRS)</strong> case actions: the application date and the outcome, from BLM's own disposition action codes.</li>
+      <li><strong>BLM ePlanning</strong> (the National NEPA Register): the environmental review tier (categorical exclusion, EA or EIS), matched on case file number.</li>
+    </ul>
+    <p>All three are public. The data was last fetched on {{ as_of.strftime('%B %-d, %Y') }}.</p>
+
+    <h3>Definitions</h3>
+    <ul>
+      <li><strong>Filing date</strong>: the earliest "Application Received" action in MLRS, or "Case Established" if there is none. It is never estimated.</li>
+      <li><strong>Decision</strong>: the first action that grants, rejects or withdraws the application. A case closed without one is "closed, no reason recorded." Later amendments, renewals or relinquishments don't change it.</li>
+      <li><strong>Decided within 12 months</strong>: a final disposition of any kind within 365 days of the filing date, as a share of all applications filed that year with a filing date, including those still pending.</li>
+      <li><strong>Overdue</strong>: open more than 60 days past the deadline. Deadline = filing date plus 2 years for cases with an EIS, plus 1 year otherwise. §1402 counts from a complete application, which these records don't show.</li>
+      <li><strong>Baseline, 5 years</strong> for a year: the five previous year-end open queues pooled (total overdue over total open). This is the lookback in §1402's introduced text. First shown for 2021, the first year with five previous year ends in the data.</li>
+      <li><strong>Baseline, 10 years</strong> for a year: the ten previous year-end open queues pooled the same way, using whichever of them exist from {{ 2016 }} on. This is the lookback reportedly in the Senate-passed version of §1402; it has not yet been verified against the passed text. The data starts in {{ 2016 }}, so {{ as_of.year }} is the only year with a full 10-year window: 2021 pools 5 year ends (the same as its 5-year baseline), 2022 pools 6, and so on to 2025, which pools 9. Shown for the same years as the 5-year baseline.</li>
+      <li><strong>Review tier</strong> is known only where an ePlanning project lists the case. Cases without one are treated as non-EIS.</li>
+    </ul>
+
+    <h3>What's excluded</h3>
+    <ul>
+      <li>Cases decided before {{ 2016 }} are not loaded. Applications filed before {{ 2016 }} appear only in the open-queue counts, if still open.</li>
+      <li>Records whose decision date is in the future or before the filing date are dropped ({% for g in f.groups[:5] %}{{ g.label }} {{ g.dropped_impossible_dates }}{{ '; ' if not loop.last else '' }}{% endfor %}).</li>
+      <li>Cases with no filing date count in the outcome table but not in timing ({% for g in f.groups[:5] %}{{ g.label }} {{ g.without_filing_date }}{{ '; ' if not loop.last else '' }}{% endfor %}).</li>
+      <li>Some large projects are missing from BLM's GIS layers (presumably because their lands couldn't be mapped) and so aren't in the data.</li>
+      <li>Wind and solar site-testing permits, temporary use permits and FERC decisions are not on this page.</li>
+    </ul>
+
+    <h3>Snapshot</h3>
+    <p>This page was built from a frozen snapshot of the database taken {{ f.snapshot }}, not from a live query. The snapshot's SHA-256 checksums:</p>
+    <div class="sums"><code>{% for name, digest in sums.items() %}{{ digest }}  {{ name }}
+{% endfor %}</code></div>
+    <p class="small">Every number on this page is also in <a href="figures.json">figures.json</a>.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Almanac Grid · Built by {% if linkedin %}<a href="{{ linkedin }}" rel="author">Samuel Littlefield</a>{% else %}Samuel Littlefield{% endif %} · Data from public BLM records, as of {{ as_of.strftime('%B %-d, %Y') }}</div>
+</footer>
+
+<div class="tip" id="tip" role="tooltip" aria-hidden="true"></div>
+<script>
+(function () {
+  var tip = document.getElementById('tip');
+  function show(el) {
+    tip.textContent = el.getAttribute('data-tip');
+    var r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    var x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
+    var y = r.top + 8 - h - 8; if (y < 8) y = r.top + 16;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px'; tip.classList.add('on');
+  }
+  function hide() { tip.classList.remove('on'); }
+  document.querySelectorAll('[data-tip]').forEach(function (el) {
+    el.addEventListener('mouseenter', function () { show(el); });
+    el.addEventListener('mouseleave', hide);
+    el.addEventListener('focus', function () { show(el); });
+    el.addEventListener('blur', hide);
+  });
+  window.addEventListener('scroll', hide, { passive: true });
+})();
+</script>
+</body>
+</html>
