@@ -15,6 +15,11 @@ Sources:
 - BLM solar right-of-way case polygons (all four disposition layers of BLM's
   national ROW case service), for the tracker cross-check. The tracker's
   own tables store no geometry.
+- LBNL "Queued Up" project-level interconnection queue data. The landing
+  page, https://emp.lbl.gov/queues, answers scripted requests with a
+  Cloudflare 403, so the file URL is set by hand from that page (QUEUED_UP_URL;
+  update it for a new edition). The file itself downloads normally.
+- Census cartographic boundary counties (1:500k), for county land shares.
 """
 
 from __future__ import annotations
@@ -34,6 +39,9 @@ EIA_PAGE = "https://www.eia.gov/electricity/data/eia860m/"
 USPVDB_URL = "https://energy.usgs.gov/uspvdb/assets/data/uspvdbGeoJSON.zip"
 SMA_ITEM = "6bf2e737c59d4111be92420ee5ab0b46"
 SMA_URL = f"https://www.arcgis.com/sharing/rest/content/items/{SMA_ITEM}/data"
+QUEUED_UP_URL = "https://emp.lbl.gov/sites/default/files/2026-05/LBNL_Ix_Queue_Data_File_thru2025.xlsx"
+QUEUED_UP_EDITION = "Queued Up 2026 Edition (data through end of 2025; file updated May 2026)"
+COUNTIES_URL = "https://www2.census.gov/geo/tiger/GENZ2025/shp/cb_2025_us_county_500k.zip"
 STATES = ("CA", "NV", "AZ", "NM", "UT")
 SOLAR_PRODUCTS = ("Solar Development Grant", "Solar Development Lease")
 
@@ -120,14 +128,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--date", default=datetime.date.today().isoformat())
     parser.add_argument("--skip-sma", action="store_true", help="the SMA download is 1.1 GB")
-    parser.add_argument("--only", choices=["eia", "uspvdb", "sma", "blm_cases"], nargs="*")
+    parser.add_argument("--only", choices=["eia", "uspvdb", "sma", "blm_cases", "queued_up", "counties"], nargs="*")
     args = parser.parse_args()
     root = Path("data/place") / args.date
     manifest_path = root / "sources.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
     session = requests.Session()
     session.headers["User-Agent"] = USER_AGENT
-    want = set(args.only or ["eia", "uspvdb", "sma", "blm_cases"]) - ({"sma"} if args.skip_sma else set())
+    want = set(args.only or ["eia", "uspvdb", "sma", "blm_cases", "queued_up", "counties"]) - ({"sma"} if args.skip_sma else set())
 
     if "eia" in want:
         url = latest_eia860m_url(session)
@@ -140,6 +148,11 @@ def main() -> None:
         manifest["sma"]["item_modified"] = datetime.datetime.fromtimestamp(item["modified"] / 1000, datetime.UTC).isoformat()
     if "blm_cases" in want:
         manifest["blm_solar_cases"] = fetch_blm_solar_cases(session, root / "blm_cases")
+    if "queued_up" in want:
+        manifest["queued_up"] = download(session, QUEUED_UP_URL, root / "queued_up", QUEUED_UP_URL.rsplit("/", 1)[1])
+        manifest["queued_up"]["edition"] = QUEUED_UP_EDITION
+    if "counties" in want:
+        manifest["counties"] = download(session, COUNTIES_URL, root / "counties", COUNTIES_URL.rsplit("/", 1)[1])
 
     root.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, indent=2))

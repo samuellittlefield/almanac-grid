@@ -304,6 +304,13 @@ results; none of them write to it.
   times in `sources.json` and the `place_source` table. Needs the extra
   packages in `requirements-place.txt`. Write-up:
   [docs/place-solar-first-pass.md](docs/place-solar-first-pass.md).
+- `python -m analysis.place_filings build|report`: Place spike 2. BLM solar
+  ROW filings vs. LBNL "Queued Up" solar interconnection requests by year,
+  in counties that are mostly BLM land vs. the rest (20 / 30 / 50%
+  thresholds). It uses the same `data/place/<date>/` inputs plus
+  `place_fetch --only queued_up counties`, and writes only its own `place_*`
+  tables. Write-up:
+  [docs/place-filings-vs-queue.md](docs/place-filings-vs-queue.md).
 
 ## Run the app
 
