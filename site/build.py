@@ -373,7 +373,8 @@ def main(argv: list[str] | None = None) -> None:
     )
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "index.html").write_text(html)
-    (args.out / "figures.json").write_text(json.dumps(fig, separators=(",", ":"), default=str))
+    # UTF-8, not \u escapes: the file is deployed as-is, and escapes don't survive every upload path.
+    (args.out / "figures.json").write_text(json.dumps(fig, separators=(",", ":"), default=str, ensure_ascii=False), encoding="utf-8")
     print(f"Built {args.out / 'index.html'} from {snapshot} (data as of {fig['as_of']})")
     print(f"  2025 solar filings without a full 12 months yet: {solar['last_cohort_short']} of {solar['cohorts'][-1]['filed']}")
     for p in fig["solar_status_36_months"]["periods"]:
