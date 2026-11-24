@@ -1,0 +1,7 @@
+# Extra packages for analysis.place_solar / analysis.place_fetch (not needed by the app)
+-r requirements.txt
+geopandas
+pyogrio
+shapely
+pyproj
+pandas

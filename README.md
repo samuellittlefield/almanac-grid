@@ -293,6 +293,17 @@ results; none of them write to it.
   from: matched on the case's own serial, inherited by a segment from its
   base serial, or taken from a review that started after the decision.
   Re-reads BLM's GIS case layers (a few minutes, public).
+- `python -m analysis.place_solar build|report`: the "Place" layer, first
+  pass. What share of new solar PV capacity in CA, NV, AZ, NM and UT sits on
+  federal land, by year online (EIA-860M operating and planned generators,
+  USPVDB array footprints, BLM's Surface Management Agency layer). Unlike the
+  others, `build` writes to the database, but only its own `place_*` tables,
+  which it drops and recreates each run. Inputs come from
+  `python -m analysis.place_fetch` into `data/place/<date>/` (about 1.2 GB,
+  mostly the SMA geodatabase; not in git), with URLs, versions and download
+  times in `sources.json` and the `place_source` table. Needs the extra
+  packages in `requirements-place.txt`. Write-up:
+  [docs/place-solar-first-pass.md](docs/place-solar-first-pass.md).
 
 ## Run the app
 
