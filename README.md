@@ -1,5 +1,55 @@
 # Almanac Grid
 
+**Live:** https://almanac.samuellittlefield.com
+
+## The project in brief
+
+**The problem.** S.5653, the Bipartisan American Affordability and Jobs Act
+(BAAJA), includes §1402: a developer could sue if federal permitting shows a
+five-year statistical pattern of denial or delay against its project type. No
+one publishes those numbers by project type. The records are spread across
+agency systems (FERC's eLibrary; BLM's case layers, MLRS and ePlanning), and
+the main ones have no bulk API.
+
+**What I built.** A normalized database of federal permitting decisions
+(approved, denied, withdrawn, and how long each took) by project type, with
+ingestion pipelines for FERC and BLM, a FastAPI app, a set of analyses, and a
+public page that answers the first question a developer would ask: how long
+does BLM take to decide solar applications?
+
+**Who it's for.** Energy project developers, their regulatory counsel, and the
+permitting consultants and law firms who advise them.
+
+**Decisions that shaped it.**
+
+- **The bill is framing, not the foundation.** It isn't law, so the dataset has
+  to be useful on its own; §1402 is the sharpest reason someone would want it.
+- **Check the data exists before scoping.** FERC and BLM records are
+  reachable; Army Corps wetlands permits are mostly behind FOIA, so they're
+  deferred until there's demand worth that wait.
+- **A data model that isn't shaped like one agency.** Each `project` has many
+  `agency_action` rows, so a pipeline's FERC certificate and its BLM
+  right-of-way can attach to the same project. That's what would make total
+  cross-agency time-to-permit measurable, the number that would show whether
+  the bill's NEPA reforms worked.
+- **Say what the data can't show.** Filing dates are never estimated; cases
+  closed without a recorded outcome stay separate instead of being guessed as
+  denials; the public page lists its caveats before its charts and is built
+  from a frozen, checksummed snapshot so every number traces back.
+- **Stay out of crowded markets.** Geospatial siting tools already have
+  incumbents, so they're out of scope.
+
+**What it shows** (snapshot of November 2026). Of solar right-of-way
+applications filed with BLM in 2016 to 2020, 36% were decided within 12
+months; of those filed in 2021 to 2025, 12% were. The full write-up, with
+methodology, is on the [live page](https://almanac.samuellittlefield.com).
+
+**How it was built.** Python, PostgreSQL and FastAPI, with tests that run on
+saved agency responses. I worked with Claude, Anthropic's AI model, to analyze
+the bill and write the code.
+
+## Technical overview
+
 A federal permitting-outcomes tracker: a normalized database of permitting
 decisions (approved / denied / withdrawn, and how long each took) by project
 type, so trends are visible over time instead of scattered across agency

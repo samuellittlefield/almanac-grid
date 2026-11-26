@@ -6,6 +6,13 @@
 <title>Almanac Grid · BLM solar permitting</title>
 <meta name="description" content="How long the Bureau of Land Management takes to decide solar, wind, geothermal, transmission and pipeline applications, 2016 to {{ as_of.strftime('%B %Y') }}. Free, from public BLM records.">
 {% if site_url %}<link rel="canonical" href="{{ site_url }}">{% endif %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Almanac Grid">
+<meta property="og:title" content="How long BLM takes to decide solar right-of-way applications">
+<meta property="og:description" content="A free tracker of federal permitting outcomes, built from public BLM records. Data as of {{ as_of.strftime('%B %-d, %Y') }}.">
+{% if site_url %}<meta property="og:url" content="{{ site_url }}">{% endif %}
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232a78d6'/%3E%3Cpath d='M5.5 3v10M10.5 3v10M3 5.5h10M3 10.5h10' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E">
 <style>
 :root {
   color-scheme: light;
@@ -136,6 +143,8 @@ th:first-child, td:first-child { text-align: left; white-space: normal; }
 thead th { font-weight: 600; color: var(--ink-2); vertical-align: bottom; white-space: normal; min-width: 64px; }
 th:first-child, td:first-child { min-width: 150px; }
 .big table { font-size: 15px; }
+.about ul, .method ul { padding-left: 20px; }
+.about li { margin-bottom: 8px; }
 .method h3 { margin-top: 20px; }
 .method ul { padding-left: 20px; }
 .method li { margin-bottom: 6px; }
@@ -148,7 +157,7 @@ footer { border-top: 1px solid var(--border); padding: 20px 0 40px; font-size: 1
 <header class="top">
   <div class="wrap">
     <a class="brand" href="./">Almanac Grid</a>
-    <span class="byline">Built by {% if linkedin %}<a href="{{ linkedin }}" rel="author">Samuel Littlefield</a>{% else %}<a class="todo" href="#" title="LinkedIn URL not set yet">Samuel Littlefield</a>{% endif %}</span>
+    <span class="byline">Built by {% if linkedin %}<a href="{{ linkedin }}" rel="author">Samuel Littlefield</a>{% else %}<a class="todo" href="#" title="LinkedIn URL not set yet">Samuel Littlefield</a>{% endif %} · <a href="#about">About this project</a></span>
   </div>
 </header>
 
@@ -165,7 +174,7 @@ footer { border-top: 1px solid var(--border); padding: 20px 0 40px; font-size: 1
       <li><strong>Solar and wind denial and withdrawal rates are lower bounds.</strong> BLM closed {{ solar.outcomes.outcome_unclear_pct|pct }} of the solar decisions here, and {{ f.groups[1].outcomes.outcome_unclear_pct|pct }} of the wind decisions, without recording a grant, rejection or withdrawal. Some of those were likely rejections or withdrawals.</li>
       <li><strong>"Decided" means any final disposition:</strong> granted, rejected, withdrawn, or closed. It is not the same as approved.</li>
       <li><strong>The numbers are small.</strong> {{ solar.cohorts|map(attribute='filed')|min }} to {{ solar.cohorts|map(attribute='filed')|max }} solar applications a year, and {{ f.groups[1].cohorts|map(attribute='filed')|min }} to {{ f.groups[1].cohorts|map(attribute='filed')|max }} for wind. A few cases move a year's percentage by several points.</li>
-      <li><strong>§1402 is part of BAAJA, which passed the Senate on November 19, 2026, as an amendment to H.R. 2347. It is not law.</strong> The deadline comparison below applies the bill's test to past years. Under the bill only patterns after enactment would count, so these figures are not a finding under it.</li>
+      <li><strong>§1402 is part of the Bipartisan American Affordability and Jobs Act (BAAJA), which passed the Senate on November 19, 2026, as an amendment to H.R. 2347. It is not law.</strong> The deadline comparison below applies the bill's test to past years. Under the bill only patterns after enactment would count, so these figures are not a finding under it.</li>
     </ul>
     <p class="small" style="margin:10px 0 0">Full definitions, sources and exclusions are in <a href="#method">Methodology</a>.</p>
   </section>
@@ -247,6 +256,17 @@ footer { border-top: 1px solid var(--border); padding: 20px 0 40px; font-size: 1
     <thead><tr><th>Project type</th><th>Decisions</th><th>Granted</th><th>Rejected</th><th>Withdrawn</th><th>Closed, no reason recorded</th></tr></thead>
     <tbody>{% for g in f.groups %}{% set o = g.outcomes %}<tr><td>{{ g.label }}</td><td>{{ o.decisions|num }}</td><td>{{ o.approved_pct|pct }}</td><td>{{ o.denied_pct|pct }}</td><td>{{ o.withdrawn_pct|pct }}</td><td>{{ o.outcome_unclear_pct|pct }}</td></tr>{% endfor %}</tbody>
   </table></div>
+
+  <section class="about" id="about">
+    <h2>About this project</h2>
+    <p>I built Almanac Grid to see what a federal permitting bill would actually measure. §1402 of BAAJA would let a developer point to a statistical pattern of denial or delay against its project type. No one publishes those numbers by project type in one place: the records are spread across separate agency systems. So I built the dataset.</p>
+    <ul>
+      <li><strong>What it is:</strong> a database of federal permitting decisions from FERC and BLM, normalized into one model: a project, and every agency action on it. That shape is what makes a project's total time across agencies measurable, the number that would show whether the bill's NEPA reforms worked.</li>
+      <li><strong>Who it's for:</strong> energy project developers, their regulatory counsel, and the permitting consultants and law firms who advise them.</li>
+      <li><strong>What I left out, and why:</strong> Army Corps wetlands permits are mostly available only through FOIA, so they wait until there's demand for that turnaround. Geospatial siting tools are a crowded market, so they're out of scope.</li>
+      <li><strong>How it's built:</strong> Python, PostgreSQL and FastAPI, reading FERC's eLibrary and three BLM systems, one of which has no public API. This page is built from a frozen, checksummed snapshot so every number can be traced. I worked with Claude, Anthropic's AI model, to analyze the bill and write the code.</li>
+    </ul>
+  </section>
 
   <section class="method" id="method">
     <h2>Methodology</h2>
